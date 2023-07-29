@@ -1,0 +1,32 @@
+{
+  "name": "wallace",
+  "version": "0.0.0",
+  "description": "The framework that brings you freedom.",
+  "babel": {
+    "presets": [
+      "@babel/preset-env"
+    ],
+    "plugins": [
+      "babel-plugin-wallace",
+      "@babel/plugin-syntax-jsx",
+      "@babel/plugin-proposal-class-properties"
+    ]
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "main": "dist/wallace.js",
+  "scripts": {
+    "prepublish": "npm run build",
+    "build": "NODE_ENV=production rollup -c",
+    "test": "jest --clearCache && jest",
+    "clear-jest": "jest --clearCache"
+  },
+  "author": "Andrew Buchan",
+  "license": "ISC",
+  "dependencies": {
+    "@babel/plugin-proposal-class-properties": "^7.18.6",
+    "babel-plugin-wallace": "^0.0.0"
+  }
+}
