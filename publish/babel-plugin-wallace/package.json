@@ -12,5 +12,6 @@
     "jsdom": "^22.1.0"
   },
   "author": "Andrew Buchan",
-  "license": "ISC"
+  "license": "MIT",
+  "gitHead": "1836ac0f2603fc33d9a51496480738792086c9d9"
 }
