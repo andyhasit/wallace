@@ -35,12 +35,10 @@ const vars = {
  *
  */
 class CodeGenerator {
-  constructor(className, html, processAsStub, babelPath) {
-    this.walker = new DomWalker(html, nodeInfo => this.processNode(nodeInfo))
+  constructor(className, processAsStub) {
     this.className = className
 
     this.prototypeVariable = `${className}_prototype`
-    this.babelPath = babelPath
     this.processAsStub = processAsStub
     this.nextElementRefIndex = 0
     this.savedWatchCallArgs = []
@@ -102,95 +100,89 @@ class CodeGenerator {
    */
   setShieldCounts() {
     const shieldCountArgIndex = 3
-    const nodePathOfEachWatchCall = this.savedWatchCallArgs.map(i => i.nodePath)
+    const nodePathOfEachWatchCall = this.savedWatchCallArgs.map(i => i.nodeTreeAddress)
     const shieldCountForEachWatchCall = extractShieldCounts(nodePathOfEachWatchCall)
     for (const [i, argSet] of this.savedWatchCallArgs.entries()) {
       argSet.watchCallArgs[shieldCountArgIndex] = shieldCountForEachWatchCall[i]
     }
   }
   /**
-   * Saves the watchCallArgs against the nodePath, which well use in watchCallArgs
+   * Saves the watchCallArgs against the nodeTreeAddress, which well use in watchCallArgs
    */
-  saveWatchCallArgs(nodePath, watchCallArgs) {
+  saveWatchCallArgs(nodeTreeAddress, watchCallArgs) {
     // The first element is undefined, which we don't need here.
-    nodePath = nodePath.slice(1)
-    this.savedWatchCallArgs.push({nodePath, watchCallArgs})
+    nodeTreeAddress = nodeTreeAddress.slice(1)
+    this.savedWatchCallArgs.push({nodeTreeAddress, watchCallArgs})
   }
   /**
-   * Gets passed to the DomWalker, which calls this for every node.
+   * Processes a node which has directives, which could be a JSXElement, JSText or JSExpression?
    */
-  processNode(nodeInfo) {
-    const {nodePath, node, tagName} = nodeInfo
-    const nodeData = extractNodeData(node, this.walker, this.processAsStub)
-    if (nodeData) {
-      let {
-        additionalLookups,
-        afterSave,
-        beforeSave,
-        saveAs,
-        props,
-        shieldQuery,
-        reverseShield,
-        watches,
-        stubName,
-        replaceWith
-      } = nodeData
+  processNodeWithDirectives(nodeData, nodeTreeAddress) {
+    let {
+      additionalLookups,
+      afterSave,
+      beforeSave,
+      saveAs,
+      props,
+      shieldQuery,
+      reverseShield,
+      watches,
+      stubName,
+      replaceWith
+    } = nodeData
 
-      // If this node is a "stub", save it and because there's nothing to do stubs.
-      if (stubName) {
-        this.saveStub(stubName, nodePath)
-        return
-      }
+    // If this node is a "stub", save it and because there's nothing to do stubs.
+    if (stubName) {
+      this.saveStub(stubName, nodeTreeAddress)
+      return
+    }
 
-      // Use the saveAs supplied, or get a sequential one
-      // TODO: warn if starts with '___'
-      saveAs = saveAs ? saveAs : this.getNextElementRef()
+    // Use the saveAs supplied, or get a sequential one
+    // TODO: warn if starts with '___'
+    saveAs = saveAs ? saveAs : this.getNextElementRef()
 
-      // If replaceWith, then it's a nested component, which needs special treatment.
-      if (replaceWith) {
-        this.saveNestedComponent(nodePath, saveAs, nodeData, replaceWith, props, replaceWith)
-      } else {
-        // TODO: do we always want to save the wrapper?
-        this.saveWrapper(nodePath, saveAs, nodeData)
-      }
+    // If replaceWith, then it's a nested component, which needs special treatment.
+    if (replaceWith) {
+      this.saveNestedComponent(nodeTreeAddress, saveAs, nodeData, replaceWith, props, replaceWith)
+    } else {
+      // TODO: do we always want to save the wrapper?
+      this.saveWrapper(nodeTreeAddress, saveAs, nodeData)
+    }
 
+    // Ensure the shieldQuery gets added
+    // This is the query to determine whether the wrappers should shield
+    // nested wrappers
+    shieldQuery = nodeData.expandValueSlot(shieldQuery)
+    if (shieldQuery) {
+      this.addWatchQueryCallback(shieldQuery)
+    }
+    // Use the shieldQuery supplied, 0 (must set as string here)
+    shieldQuery = shieldQuery ? `'${shieldQuery}'` : '0'
 
-      // Ensure the shieldQuery gets added
-      // This is the query to determine whether the wrappers should shield
-      // nested wrappers
-      shieldQuery = nodeData.expandValueSlot(shieldQuery)
-      if (shieldQuery) {
-        this.addWatchQueryCallback(shieldQuery)
-      }
-      // Use the shieldQuery supplied, 0 (must set as string here)
-      shieldQuery = shieldQuery ? `'${shieldQuery}'` : '0'
-
-      // shieldCount is the number of wrappers to shield, which will equate to the
-      // number of wrappers nested underneath, which we have to calculate postParsing
-      // so we just set it to 0 for now.
-      const defaultShieldCount = 0
+    // shieldCount is the number of wrappers to shield, which will equate to the
+    // number of wrappers nested underneath, which we have to calculate postParsing
+    // so we just set it to 0 for now.
+    const defaultShieldCount = 0
 
 
-      const watchCallbacks = this.buildWatcherCallbacksObject(watches)
-      const watchCallArgs = [
-        `'${saveAs}'`,
-        shieldQuery,
-        reverseShield.toString(),
-        defaultShieldCount,  // shieldCount is at position 3 - if this changes we must change setShieldCounts!
-        watchCallbacks
-      ]
-      // We save this as we're going to need it postParsing to set the shieldCount
-      // Must slice the nodePath!
-      this.saveWatchCallArgs(nodePath.slice(), watchCallArgs)
+    const watchCallbacks = this.buildWatcherCallbacksObject(watches)
+    const watchCallArgs = [
+      `'${saveAs}'`,
+      shieldQuery,
+      reverseShield.toString(),
+      defaultShieldCount,  // shieldCount is at position 3 - if this changes we must change setShieldCounts!
+      watchCallbacks
+    ]
+    // We save this as we're going to need it postParsing to set the shieldCount
+    // Must slice the nodeTreeAddress!
+    this.saveWatchCallArgs(nodeTreeAddress.slice(), watchCallArgs)
 
-      // TODO: change this, as we may call different functions to make simpler watchers
-      const watchCall = new CallStatement(`${this.prototypeVariable}.${vars.getWatch}`, watchCallArgs)
-      this.watches.add(watchCall)
+    // TODO: change this, as we may call different functions to make simpler watchers
+    const watchCall = new CallStatement(`${this.prototypeVariable}.${vars.getWatch}`, watchCallArgs)
+    this.watches.add(watchCall)
 
-
-      for (const [lookupKey, statement] of Object.entries(additionalLookups)) {
-        this.addLookupEntry(lookupKey, statement)
-      }
+    for (const [lookupKey, statement] of Object.entries(additionalLookups)) {
+      this.addLookupEntry(lookupKey, statement)
     }
   }
   /**
@@ -270,11 +262,11 @@ class CodeGenerator {
   /**
    * Add a saved Element.
    */
-  saveWrapper(nodePath, saveAs, nodeData) {
-    this.saveElement(saveAs, this.buildWrapperInitCall(nodeData, nodePath), nodeData.chainedCalls)
+  saveWrapper(nodeTreeAddress, saveAs, nodeData) {
+    this.saveElement(saveAs, this.buildWrapperInitCall(nodeData, nodeTreeAddress), nodeData.chainedCalls)
   }
   /**
-   * Returns the call for creating a new wrapper based on nodePath.
+   * Returns the call for creating a new wrapper based on nodeTreeAddress.
    *
    * If customWrapperClass is provided, it is initiated with new, and the class better
    * be in scope. That is why we do it with new here rather than passing the class
@@ -283,8 +275,8 @@ class CodeGenerator {
    * there, but it isn't guaranteed to be where componentRefInBuild is defined.
    *
    */
-  buildWrapperInitCall(nodeData, nodePath) {
-    const path = getLookupArgs(nodePath)
+  buildWrapperInitCall(nodeData, nodeTreeAddress) {
+    const path = getLookupArgs(nodeTreeAddress)
     if (nodeData.wrapperOverride) {
       return nodeData.wrapperOverride
     } else if (nodeData.customWrapperClass) {
@@ -293,22 +285,22 @@ class CodeGenerator {
     }
     return `${componentRefInBuild}.__gw(${path})`
   }
-  saveNestedComponent(nodePath, saveAs, nodeData, tagName, props, replaceWith) {
+  saveNestedComponent(nodeTreeAddress, saveAs, nodeData, tagName, props, replaceWith) {
     const nestedComponentClass = replaceWith || tagName
     if (props) {
       this.nestedComponentProps.add(saveAs, new FunctionStatement(propsCallbackArgs, [`return ${props}`]))
     } else {
       this.nestedComponentProps.add(saveAs, '0')
     }
-    const initCall = `${componentRefInBuild}.__ni(${getLookupArgs(nodePath)}, ${nestedComponentClass})`
+    const initCall = `${componentRefInBuild}.__ni(${getLookupArgs(nodeTreeAddress)}, ${nestedComponentClass})`
     this.saveElement(saveAs, initCall, nodeData.chainedCalls)
   }
-  saveStub(stubName, nodePath) {
+  saveStub(stubName, nodeTreeAddress) {
     if (!re_lnu.test(stubName)) {
       this.walker.throw('Stub name may only contain letters numbers and underscores')
     }
     this.nestedComponentProps.add(stubName, new FunctionStatement(propsCallbackArgs, ['return c.props']))
-    const initCall = `${componentRefInBuild}.__ni(${getLookupArgs(nodePath)}, this.__stubs__${stubName})`
+    const initCall = `${componentRefInBuild}.__ni(${getLookupArgs(nodeTreeAddress)}, this.__stubs__${stubName})`
     this.saveElement(stubName, initCall, [])
   }
   saveElement(saveAs, initCall, chainedCalls) {

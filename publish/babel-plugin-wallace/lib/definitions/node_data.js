@@ -13,8 +13,8 @@ const {Watcher} = require('./watcher')
 class NodeData {
   constructor(node, processAsStub) {
     this.node = node
-    this.processAsStub = processAsStub // whether the whole html declaration is a stub
-    this.stubName = undefined // Whether this node should be a stub
+    this.processAsStub = processAsStub
+    this.stubName = undefined
     this.saveAs = undefined
     this.customWrapperClass = undefined
     this.customWrapperArgs = undefined

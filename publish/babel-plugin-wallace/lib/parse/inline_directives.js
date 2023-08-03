@@ -39,7 +39,9 @@ const processInlineWatches = (nodeData, node) => {
     }
   }
   
-  if (node.nodeType === 3) {
+  // TODO: change this for JSXText node, which may have expressions (but we just 
+  // toString it so that's fine) -- but what if has nested JSXElelments?
+  if (node.type === 'JSXText') {
     /*
     This means we are in a text node:
 
@@ -54,7 +56,9 @@ const processInlineWatches = (nodeData, node) => {
     and the path to node will be wrong, so we use a placeholder instead of
     an empty string.
     */
-    if (addInlineWatches(nodeData, node.textContent, 'text', true)) {
+    if (addInlineWatches(nodeData, node.toString(), 'text', true)) {
+
+      // TODO: change this for JSXText node, which may have expressions.
       node.textContent = '#'
     }
   }
