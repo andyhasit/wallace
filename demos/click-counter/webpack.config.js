@@ -4,7 +4,7 @@ const presets = [];
 
 const baseConfig = {
   mode: "development",
-  entry: "./src/index.js",
+  entry: "./src/index.jsx",
   devServer: {
     static: "./",
     hot: true,
@@ -16,18 +16,11 @@ const baseConfig = {
   },
   module: {
     rules: [{
-      test: /\.js?$/,
+      test: /\.[jt]sx?$/,
       exclude: /node_modules/,
       use: [
         {
           loader: "babel-loader",
-          options: {
-            presets: presets,
-            plugins: [
-              "babel-plugin-wallace",
-              "@babel/plugin-proposal-class-properties"
-            ],
-          }
         }
       ]
     }]

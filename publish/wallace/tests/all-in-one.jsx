@@ -45,8 +45,15 @@ import {h, mount} from 'wallace'
 // }
 
 
-const X = 
-    <div class="foo" style="xxx">
-        a = 2
-        Hey <span>YOU</span> hello {timmy|foo(n)} yay
-    </div>
+// const X = 
+//     <div class="foo" style="xxx">
+//         a = 2
+//         Hey <span>YOU</span> hello {timmy|foo(n)} yay
+//     </div>
+
+const TestComponent =
+  <div id="test">
+    <span>hello {p.name}</span>
+    <span>{service.name}</span>
+    <span _show={show}>hide me</span>
+  </div>

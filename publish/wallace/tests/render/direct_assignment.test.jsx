@@ -16,7 +16,7 @@ test('Renders correctly', () => {
   const div = load(TestComponent, props)
   expect(div).toShow(`
     <div id="test">
-      <span>hello bob</span>
+      <span>hello <text>bob</text></span>
       <span>jane</span>
       <span class="hidden">hide me</span>
     </div>

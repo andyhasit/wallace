@@ -39,8 +39,7 @@ const processInlineWatches = (nodeData, node) => {
     }
   }
   
-  // This uses to check if (node.type === 3)
-  if (node.textContent) {
+  if (node.textContent || node.tagName == "TEXT") {
     /*
     This means we are in a text node:
 
@@ -58,7 +57,7 @@ const processInlineWatches = (nodeData, node) => {
     if (addInlineWatches(nodeData, node.textContent, 'text', true)) {
 
       // TODO: change this for JSXText node, which may have expressions.
-      node.textContent = '#'
+      node.textContent = '-'
     }
   }
 

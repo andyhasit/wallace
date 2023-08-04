@@ -52,8 +52,10 @@ class AbstractJSXProcessor {
     if (i !== undefined) {
       this._nodeTreeAddress.push(i)
     }
-
-    const [domElement, childAstNodes] = this._parseJSXElement(astNode)
+    const domElement = this._convertToDomElement(astNode)
+    const childAstNodes = this._squashChildren(astNode)
+    // const [domElement, childAstNodes] = this._parseJSXElement(astNode)
+    // console.log(domElement, this._nodeTreeAddress, childAstNodes.length)
     if (this._rootElement) {
       attachElement(this._rootElement, this._nodeTreeAddress, domElement)
     } else {
@@ -69,86 +71,80 @@ class AbstractJSXProcessor {
     childAstNodes.forEach((node, i) => this._walkJSXTree(node, i))
     this._nodeTreeAddress.pop()
   }
-  /**
-   * Parses a JSX element returning a [domElement, childAstNodes] because we currently
-   * squash sequential text-like children into one JSXtext:
-   * 
-   *   [JSXText('hi '), JSXExpression({name}), JSXText('!')] > JSXText('hi {name}!')
-   * 
-   * And parse the text in there.
-   * 
-   * We will change this to eventually inspect the JSXExpression properly.
-   */
-  _parseJSXElement(astNode) {
-    let domElement, childAstNodes = []
-  
+  _convertToDomElement(astNode) {
     switch (astNode.type) {
       case 'JSXText':
-        domElement = doc.createTextNode(astNode.value)
-        break
+        return doc.createTextNode(astNode.value)
       case 'JSXExpressionContainer':
-        domElement = doc.createTextNode(astNode.toString())
-        break
+        const te = doc.createElement('text')
+        te.textContent = this._readCode(astNode)
+        return te
       case 'JSXElement':
         const openingElement = astNode.openingElement
         const tagName = openingElement.name.name
         const attributes = openingElement.attributes
-        console.log(attributes)
-        domElement = doc.createElement(tagName)
+        const domElement = doc.createElement(tagName)
         
         // TODO: change to proper way later
-        attributes.forEach(attr => {
-          const code = this._path.hub.file.code.substring(attr.start, attr.end)
-          let [name, ...rest] = code.split('=')
-          rest = rest.join('=')
-          if (name.startsWith('_')) {
-            name = ':' + name.slice(1)
-            if (rest.startsWith("{")) {
-              rest = rest.slice(1, - 1)
-            }
-          } else {
-            rest = trimChar(rest, '"')
-          }
-          domElement.setAttribute(name, rest)
-        })
-        childAstNodes = this._squashChildren(astNode)
-        break
+        this._extractAttributes(domElement, attributes)
+        return domElement
       default:
         console.log(astNode)
         throw new Error('Unexpected node type: ' + astNode.type)
     }
-    return [domElement, childAstNodes]
+  }
+  _extractAttributes(domElement, astAttributes) {
+    astAttributes.forEach(attr => {
+      const code = this._path.hub.file.code.substring(attr.start, attr.end)
+      let [name, ...rest] = code.split('=')
+      rest = rest.join('=')
+      if (name.startsWith('_')) {
+        name = ':' + name.slice(1)
+        if (rest.startsWith("{")) {
+          rest = rest.slice(1, - 1)
+        }
+      } else {
+        rest = trimChar(rest, '"')
+      }
+      domElement.setAttribute(name, rest)
+    })
   }
   /**
-   * squash sequential text-like children into one JSXtext:
+   * Removes blank JSText nodes.
    * 
-   *   [JSXText('hi '), JSXExpression({name}), JSXText('!')] > JSXText('hi {name}!')
    */
   _squashChildren(astNode) {
+    if (astNode.type != 'JSXElement') {
+      return []
+    }
     const children = []
     const sequence = []
 
     const flush = () => {
-      const text = sequence.filter(s => s.trim().length).join('')
-      // const sanitised = sequence.join('').replace(/(?:\r\n|\r|\n)/g, ' ')
-      if (text.length) {
-        const textNode = JSXText(text)
-        children.push(textNode)
+      if (sequence.length === 1) {
+        const node = sequence[0]
+        if (node.type == 'JSXExpressionContainer') {
+          const text = this._readCode(node)
+          children.push(JSXText(text))
+        } else {
+          children.push(node)
+        }
+      } else {
+        children.push(...sequence)
       }
       sequence.length = 0
     }
-    
+
+    // TODO: if we have a JSXExpressionContainer on its own, convert it to a JSXText.
     astNode.children.forEach(child => {
       switch (child.type) {
         case 'JSXText':
-          const text = child.value
-          if (text) {
-            sequence.push(text)
+          if (child.value.trim()?.length) {
+            sequence.push(child)
           }
           break
         case 'JSXExpressionContainer':
-          const rawCode = this._path.hub.file.code.substring(child.start, child.end)
-          sequence.push(rawCode)
+          sequence.push(child)
           break
         case 'JSXElement':
           flush()
@@ -162,7 +158,9 @@ class AbstractJSXProcessor {
     flush()
     return children
   }
-  
+  _readCode(astNode) {
+    return this._path.hub.file.code.substring(astNode.start, astNode.end)
+  }
 
 }
 
