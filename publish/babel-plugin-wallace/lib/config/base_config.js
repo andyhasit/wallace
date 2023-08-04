@@ -107,6 +107,12 @@ const config = {
         this.stubName = stubName
       }
     },
+    ':style': {
+      params: 'stubName',
+      handle: function(stubName) {
+        this.stubName = stubName
+      }
+    },
     ':swap': {
       params: 'watch, mappings, fallback?',
       handle: function(watch, mappings, fallback) {

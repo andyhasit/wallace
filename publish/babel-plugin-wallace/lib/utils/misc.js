@@ -111,6 +111,29 @@ const extractShieldCounts = (paths) => {
 const escapeSingleQuotes = (text) => text.replace(/'/g, "\\'")
 const escapeDoubleQuotes = (text) => text.replace(/"/g, '\\"')
 
+const trimChar = (string, charToRemove) => {
+    while(string.charAt(0)==charToRemove) {
+        string = string.substring(1);
+    }
+    while(string.charAt(string.length-1)==charToRemove) {
+        string = string.substring(0,string.length-1);
+    }
+    return string;
+}
+
+const trimChars = (str, chars) => {
+    var start = 0, 
+        end = str.length;
+
+    while(start < end && chars.indexOf(str[start]) >= 0)
+        ++start;
+
+    while(end > start && chars.indexOf(str[end - 1]) >= 0)
+        --end;
+
+    return (start > 0 || end < str.length) ? str.substring(start, end) : str;
+}
+
 
 module.exports = {
 	arrayStartsWith,
@@ -123,5 +146,7 @@ module.exports = {
 	isFunc,
 	isUnd,
 	replaceArgs,
-	splitTrim
+	splitTrim,
+	trimChar,
+	trimChars
 }

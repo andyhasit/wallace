@@ -1,21 +1,24 @@
 import {c, load, Component} from '../utils'
 
-
-const TestComponent =
-  <div>
-    <span>hello {p.name}</span>
-    <span>{service.name}</span>
-  </div>
-  
+const show = false
 const props = {name: 'bob'}
 const service = {name: 'jane'}
+
+const TestComponent =
+  <div id="test">
+    <span>hello {p.name}</span>
+    <span>{service.name}</span>
+    <span _show={show}>hide me</span>
+  </div>
+
 
 test('Renders correctly', () => {
   const div = load(TestComponent, props)
   expect(div).toShow(`
-    <div>
+    <div id="test">
       <span>hello bob</span>
       <span>jane</span>
+      <span class="hidden">hide me</span>
     </div>
   `)
 })

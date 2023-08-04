@@ -3,7 +3,7 @@ const {extractNodeData} = require('./parse/parse_node')
 const {JSDOM} = require( 'jsdom')
 const {insertStatementsAfter} = require('./utils/babel')
 const {stripHtml, preprocessHTML} = require('./utils/dom')
-const {escapeSingleQuotes} = require('./utils/misc')
+const {escapeSingleQuotes, trimChar} = require('./utils/misc')
 const {JSXText} = require('@babel/types')
 
 
@@ -52,20 +52,20 @@ class AbstractJSXProcessor {
     if (i !== undefined) {
       this._nodeTreeAddress.push(i)
     }
-    const [domElement, childAstNodes] = this._parseJSXElement(astNode)
-  
-    console.log(domElement, childAstNodes.length, childAstNodes)
-    // This is a temporary measure allowing us to reuse the functionality for HTML strings.
-    const nodeData = extractNodeData(domElement, this._processAsStub)
 
-    if (nodeData) {
-      this._generator.processNodeWithDirectives(nodeData, this._nodeTreeAddress)
-    }
+    const [domElement, childAstNodes] = this._parseJSXElement(astNode)
     if (this._rootElement) {
       attachElement(this._rootElement, this._nodeTreeAddress, domElement)
     } else {
       this._rootElement = domElement
     }
+
+    // This is a temporary measure allowing us to reuse the functionality for HTML strings.
+    const nodeData = extractNodeData(domElement, this._processAsStub)
+    if (nodeData) {
+      this._generator.processNodeWithDirectives(nodeData, this._nodeTreeAddress)
+    }
+
     childAstNodes.forEach((node, i) => this._walkJSXTree(node, i))
     this._nodeTreeAddress.pop()
   }
@@ -95,6 +95,22 @@ class AbstractJSXProcessor {
         const attributes = openingElement.attributes
         console.log(attributes)
         domElement = doc.createElement(tagName)
+        
+        // TODO: change to proper way later
+        attributes.forEach(attr => {
+          const code = this._path.hub.file.code.substring(attr.start, attr.end)
+          let [name, ...rest] = code.split('=')
+          rest = rest.join('=')
+          if (name.startsWith('_')) {
+            name = ':' + name.slice(1)
+            if (rest.startsWith("{")) {
+              rest = rest.slice(1, - 1)
+            }
+          } else {
+            rest = trimChar(rest, '"')
+          }
+          domElement.setAttribute(name, rest)
+        })
         childAstNodes = this._squashChildren(astNode)
         break
       default:
@@ -103,6 +119,11 @@ class AbstractJSXProcessor {
     }
     return [domElement, childAstNodes]
   }
+  /**
+   * squash sequential text-like children into one JSXtext:
+   * 
+   *   [JSXText('hi '), JSXExpression({name}), JSXText('!')] > JSXText('hi {name}!')
+   */
   _squashChildren(astNode) {
     const children = []
     const sequence = []
