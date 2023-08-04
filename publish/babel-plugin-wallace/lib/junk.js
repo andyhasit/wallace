@@ -29,7 +29,7 @@
  *        generateStatements
  *          CodeGenerator
  *      
- * 
+ * What about JSXIdentifier?
  * 
  */
 

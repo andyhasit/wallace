@@ -1,86 +1,26 @@
 const {CodeGenerator} = require('./generate/code_generator')
 const {extractNodeData} = require('./parse/parse_node')
 const {JSDOM} = require( 'jsdom')
+const {insertStatementsAfter} = require('./utils/babel')
 const {stripHtml, preprocessHTML} = require('./utils/dom')
 const {escapeSingleQuotes} = require('./utils/misc')
-const t = require('@babel/types')
+const {JSXText} = require('@babel/types')
 
 
 const dom = new JSDOM('<!DOCTYPE html>')
 const doc = dom.window.document
 
-// let text = doc.createTextNode('here is some text');
-// let div = doc.createElement('div');
-
-
-const squashChildren = (astNode) => {
-  const children = []
-  const sequence = []
-  const flush = () => {
-    const textNode = t.JSXText(sequence.join(''))
-    // textNode.value = 
-    children.push(textNode)
-    // children.push(t.JSXText(t.stringLiteral(sequence.join(''))))
-    sequence.length = 0
-  }
-  // console.log(astNode.children)
-  astNode.children.forEach(child => {
-    switch (child.type) {
-      case 'JSXText':
-        sequence.push(child.value)
-        break
-      case 'JSXExpressionContainer':
-        sequence.push(child.value)
-        break
-      case 'JSXElement':
-        flush()
-        children.push(child)
-        break
-      default:
-        console.log(astNode)
-        throw new Error('Unexpected node type: ' + child.type)
-    }
-  })
-  flush()
-  return children
-}
-
-/**
- * 
- * 
- */
-const extractDomElement = (astNode) => {
-  let domElement, childNodes = []
-
-  switch (astNode.type) {
-    case 'JSXText':
-      domElement = doc.createTextNode(astNode.value)
-      break
-    case 'JSXExpressionContainer':
-      domElement = doc.createTextNode(astNode.toString())
-      break
-    case 'JSXElement':
-      const tagName = astNode.openingElement.name.name
-      domElement = doc.createElement(tagName)
-      childNodes = squashChildren(astNode)
-      break
-    default:
-      console.log(222, astNode)
-      throw new Error('Unexpected node type: ' + astNode.type)
-  }
-  return [domElement, childNodes]
-}
 
 /**
  * Attach a new element to the DOM at the specified path.
  */
 const attachElement = (root, nodeTreeAddress, element) => {
   // TODO: figure this out... 
-  path = nodeTreeAddress.slice(0, -1)
-  const attach = path.reduce((acc, index) => acc.childNodes[index], root)
+  const relativePath = nodeTreeAddress.slice(0, -1)
+  const attach = relativePath.reduce((acc, index) => acc.childNodes[index], root)
   attach.appendChild(element)
-
 };
+
 
 /**
  * Base class for processing JSX in a certain context.
@@ -90,98 +30,121 @@ const attachElement = (root, nodeTreeAddress, element) => {
  */
 class AbstractJSXProcessor {
   constructor(path) {
-    this.path = path
-    // console.log(this.path.node.openingElement.attributes)
-    this.processAsStub = false
+    this._path = path
+    this._nodeToInsertAfter = this._path.parentPath.parentPath
+    // The address of the current node processed e.g. [1, 3, 0]
+    this._nodeTreeAddress = []
+    this._rootElement = undefined
+    this._componentName = path.parent.id.name
+    this._processAsStub = false
+    this._generator = new CodeGenerator(this._componentName, this._processAsStub)
   }
   process() {
-    // The address of the current node processed e.g. [1, 3, 0]
-    const nodeTreeAddress = []
-    let rootElement // this.path.node //  = doc.createElement('div')
-    const generator = new CodeGenerator(this.componentName, this.processAsStub)
-    
-    // Called recursively to process each node in JSX.
-    // Note that there could be other syntax in here like for loops - but would they 
-    // be expressions?
-    const walkJSX = (astNode, i) => {
-
-
-      const [domElement, childNodes] = extractDomElement(astNode)
-      // console.log(domElement, childNodes?.map(node => node.type))
-      // This is a temporary measure allowing us to reuse the functionality for HTML strings.
-      const nodeData = extractNodeData(domElement, this.processAsStub)
-
-      // TODO: change the above to instantiate the nodeData object here?
-      // Then check if nodeData.hasDirectives
-      // Maybe also make it specify the children to walk
-      // Maybe differentiate node types here.
-
-      if (i !== undefined) {
-        nodeTreeAddress.push(i)
-      }
-      if (rootElement) {
-        // TODO append as per proto.__fe using nodeTreeAddress
-        attachElement(rootElement, nodeTreeAddress, domElement)
-      } else {
-        rootElement = domElement
-      }
-      if (nodeData) {
-        generator.processNodeWithDirectives(nodeData, nodeTreeAddress)
-      }
-
-      childNodes.forEach(walkJSX)
-      nodeTreeAddress.pop()
+    this._walkJSXTree(this._path.node, undefined)
+    this._generator.rawHTML = this._getHtmlString()
+    insertStatementsAfter(this._nodeToInsertAfter, this._generator.buildStatements())
+    this._applyTransformations()
+  }
+  _getHtmlString() {
+    return escapeSingleQuotes(stripHtml(preprocessHTML(this._rootElement.outerHTML)))
+  }
+  _walkJSXTree(astNode, i) {
+    if (i !== undefined) {
+      this._nodeTreeAddress.push(i)
     }
+    const [domElement, childAstNodes] = this._parseJSXElement(astNode)
+  
+    console.log(domElement, childAstNodes.length, childAstNodes)
+    // This is a temporary measure allowing us to reuse the functionality for HTML strings.
+    const nodeData = extractNodeData(domElement, this._processAsStub)
 
-    walkJSX(this.path.node)
-
-    // TODO: strip whitespace, and handle \n better?
-    const html = escapeSingleQuotes(stripHtml(preprocessHTML(rootElement.outerHTML)))
-    console.log(html)
-    // generator.rootElement = rootElement
-    this.applyTransformations()
-  }
-
-  _traverseJSX() {
-    // Must start at parent as it was already visited.
-    // this.path.parentPath.traverse(this.getVisitor())
-
-    // const walk = (node) => {
-    //   console.log(node.type)
-    //   if (node.children) {
-    //     node.children.forEach(walk)
-    //   }
-    // }
-
-    // walk(this.path.node)
-
-    
-  }
-  getVisitor() {
-    return {
-      JSXElement: (path) => this.JSXElement(path),
-      JSXText: (path) => this.JSXText(path),
-      JSXExpressionContainer: (path) => this.JSXExpressionContainer(path),
+    if (nodeData) {
+      this._generator.processNodeWithDirectives(nodeData, this._nodeTreeAddress)
     }
+    if (this._rootElement) {
+      attachElement(this._rootElement, this._nodeTreeAddress, domElement)
+    } else {
+      this._rootElement = domElement
+    }
+    childAstNodes.forEach((node, i) => this._walkJSXTree(node, i))
+    this._nodeTreeAddress.pop()
   }
-  applyTransformations() {
-    throw {message: 'Not implemented'}
+  /**
+   * Parses a JSX element returning a [domElement, childAstNodes] because we currently
+   * squash sequential text-like children into one JSXtext:
+   * 
+   *   [JSXText('hi '), JSXExpression({name}), JSXText('!')] > JSXText('hi {name}!')
+   * 
+   * And parse the text in there.
+   * 
+   * We will change this to eventually inspect the JSXExpression properly.
+   */
+  _parseJSXElement(astNode) {
+    let domElement, childAstNodes = []
+  
+    switch (astNode.type) {
+      case 'JSXText':
+        domElement = doc.createTextNode(astNode.value)
+        break
+      case 'JSXExpressionContainer':
+        domElement = doc.createTextNode(astNode.toString())
+        break
+      case 'JSXElement':
+        const openingElement = astNode.openingElement
+        const tagName = openingElement.name.name
+        const attributes = openingElement.attributes
+        console.log(attributes)
+        domElement = doc.createElement(tagName)
+        childAstNodes = this._squashChildren(astNode)
+        break
+      default:
+        console.log(astNode)
+        throw new Error('Unexpected node type: ' + astNode.type)
+    }
+    return [domElement, childAstNodes]
   }
-  JSXElement(path) {
-    console.log(this.name)
-    var openingElement = path.node.openingElement
-    var tagName = openingElement.name.name
-    console.log('--JSXElement', tagName)
-    // console.log('children', path.node.children)
-    console.log('children', path.toString())
+  _squashChildren(astNode) {
+    const children = []
+    const sequence = []
+
+    const flush = () => {
+      const text = sequence.filter(s => s.trim().length).join('')
+      // const sanitised = sequence.join('').replace(/(?:\r\n|\r|\n)/g, ' ')
+      if (text.length) {
+        const textNode = JSXText(text)
+        children.push(textNode)
+      }
+      sequence.length = 0
+    }
+    
+    astNode.children.forEach(child => {
+      switch (child.type) {
+        case 'JSXText':
+          const text = child.value
+          if (text) {
+            sequence.push(text)
+          }
+          break
+        case 'JSXExpressionContainer':
+          const rawCode = this._path.hub.file.code.substring(child.start, child.end)
+          sequence.push(rawCode)
+          break
+        case 'JSXElement':
+          flush()
+          children.push(child)
+          break
+        default:
+          console.log(astNode)
+          throw new Error('Unexpected node type: ' + child.type)
+      }
+    })
+    flush()
+    return children
   }
-  JSXExpressionContainer(path) {
-    console.log('--JSXExpressionContainer', path.toString())
-  }
-  JSXText(path) {
-    console.log('--JSXText', path.node.value)
-  }
+  
+
 }
+
 
 /**
  * Handles JSX in the following context:
@@ -191,14 +154,14 @@ class AbstractJSXProcessor {
 class JSXInDirectAssignment extends AbstractJSXProcessor {
   constructor(path) {
     super(path)
-    this.baseClassName = path.parent.id.name
-    this.nodeToInsertAfter = path.parentPath.parentPath
+    this._baseClassName = path.parent.id.name
+    this._nodeToInsertAfter = path.parentPath.parentPath
   }
-  applyTransformations() {
+  _applyTransformations() {
     // TODO: change __ex to not require arg?
-    // Also chek import.
-    // insertStatementsAfter(this.nodeToInsertAfter, ["a = 1", "b = 2"])
-    this.path.replaceWithSourceString(`Component.prototype.__ex(Component)`)
+    // Also check that Component is imported.
+    // insertStatementsAfter(this._nodeToInsertAfter, ["a = 1", "b = 2"])
+    this._path.replaceWithSourceString(`Component.prototype.__ex(Component)`)
   }
 }
 
@@ -210,10 +173,10 @@ class JSXInDirectAssignment extends AbstractJSXProcessor {
  *   }
  */ 
 class JSXInObjectHtml extends AbstractJSXProcessor {
-  applyTransformations() {
+  _applyTransformations() {
     // Removes the property and value.
-    this.path.parentPath.remove()
-    this.path.remove()
+    this._path.parentPath.remove()
+    this._path.remove()
   }
 }
 

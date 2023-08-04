@@ -15,6 +15,7 @@ module.exports = () => {
 
         // TODO: change to...
         // JSXProcessorClasses.map()filter(processor => new processor.match())
+        // Or move getJSXprocessor logic here.
         const processor = getJSXprocessor(path)
         processor.process()
       }

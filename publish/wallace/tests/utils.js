@@ -1,7 +1,7 @@
 const c = console
 const {prettyPrint} = require('html')
 
-import diff from 'jest-diff'
+import {diff} from 'jest-diff'
 import {
   h, 
   createComponent, 

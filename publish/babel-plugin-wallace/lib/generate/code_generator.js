@@ -37,6 +37,7 @@ const vars = {
 class CodeGenerator {
   constructor(className, processAsStub) {
     this.className = className
+    this.rawHTML = undefined
 
     this.prototypeVariable = `${className}_prototype`
     this.processAsStub = processAsStub
@@ -61,7 +62,6 @@ class CodeGenerator {
    * Initiates parsing and returns all the generated statements.
    */
   buildStatements() {
-    this.walker.parse()
     this.postParsing()
     const statements = [
       `var ${this.prototypeVariable} = ${this.className}.prototype;`,
@@ -84,7 +84,7 @@ class CodeGenerator {
     this.buildMethod.add(this.savedElements.buildAssign(`${componentRefInBuild}.el`))
     this.afterSave.forEach(i => this.buildMethod.add(i))
     // We do this at the end as the dom has been changed
-    const convertedHTML = this.buildHtmlString(this.walker.dom.outerHTML)
+    const convertedHTML = this.buildHtmlString(this.rawHTML)
     this.htmlString.set(`'${convertedHTML}'`)
   }
   /**
