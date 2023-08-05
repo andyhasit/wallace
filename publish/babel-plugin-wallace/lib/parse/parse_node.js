@@ -3,7 +3,7 @@ const {RequestsHelp} = require('../definitions/constants')
 const {NodeData} = require('../definitions/node_data')
 const {processInlineWatches} = require('./inline_directives')
 const {processDirective} = require('../config/parse_directives')
-const {config} = require('../config/base_config')
+const {config} = require('../config')
 
 /**
  * Extracts the relevant data from the HTML node, and removes parts that need removed.

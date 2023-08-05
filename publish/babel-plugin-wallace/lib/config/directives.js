@@ -3,22 +3,13 @@
  * 
  * A directive definition's handler's "this" is a NodeData instance.
  */
-const fs = require('fs');
-const path = require('path');
+const {RequestsHelp} = require('../definitions/constants')
 const componentRefVariable = 'c'; // The variable name by which the component will be known.
 const watchAlways = '*';
 const watchNever = '';
 
 
-
-const config = {
-  options: {
-    inlineDelimiters: ['{', '}']
-  },
-  aliases: {
-    '': 'watch'
-  },
-  directives: {
+const directives = {
     ':bind': {
       params: 'watch, event?',
       handle: function(watch, event='change') {
@@ -53,6 +44,11 @@ const config = {
       params: 'watch',
       handle: function(watch) {
         this.shieldQuery = watch
+      }
+    },
+    ':helper': {
+      handle: function(watch, converter) {
+        throw new RequestsHelp(helpTopic)
       }
     },
     ':inner': {
@@ -150,25 +146,6 @@ const config = {
       }
     }
   }
-}
 
+  module.exports = {directives}
 
-
-
-// Use customm config file if there is one.
-const customConfigFile = path.join(process.cwd(), 'wallace.config.js')
-
-if (fs.existsSync(customConfigFile)) {
-  var customConfig = require(customConfigFile)
-  Object.assign(config.directives, customConfig.directives)
-  Object.assign(config.options, customConfig.options)
-}
-
-const directives = config.directives
-
-for (const [key, value] of Object.entries(config.aliases)) {
-  directives[':' + key] = directives[':' + value]
-}
-
-
-module.exports = {config}

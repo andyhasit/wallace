@@ -5,7 +5,7 @@
 const {splitter} = require('../definitions/constants')
 const {extractAtts, isLeafNode, removeAtt} = require('../utils/dom')
 const {escapeSingleQuotes, clearIfEmpty, replaceArgs} = require('../utils/misc')
-const {config} = require('../config/base_config')
+const {config} = require('../config')
 
 // Settings for inline directives
 const [startDelimiter, endDelimiter] = config.options.inlineDelimiters

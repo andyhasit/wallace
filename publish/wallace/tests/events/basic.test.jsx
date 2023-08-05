@@ -6,13 +6,10 @@ const data = {
 
 let args = undefined
 
-class TestComponent extends Component {
-  __html__ = `
+const TestComponent =
     <div>
-      <button :el="btn" :onClick="clicked(w, e, p, c)">Go</button>
+      <button _el={btn} _onclick={clicked(w, e, p, c)}>Go</button>
     </div>
-  `
-}
 
 const clicked = (w, e, p, c) => {
   p.clicks ++

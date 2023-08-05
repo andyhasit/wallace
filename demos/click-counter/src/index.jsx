@@ -16,10 +16,12 @@ const ClickCounter =
 let ticks = 0
 const div = document.getElementById('main')
 
+// const Foo = [<h1></h1>, 8]
+
 const StopWatch = 
-  <div>
+  <div _help>
     <h2>Stopwatch</h2>
-    <span>{ticks| Math.round(n / 10)}:{ticks}</span>
+    <span>{ticks| Math.round(n / 10)}:{ticks % 10}</span>
   </div>
 
 

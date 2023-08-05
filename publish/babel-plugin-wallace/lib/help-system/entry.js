@@ -1,6 +1,6 @@
 const fs = require('fs')
 const path = require('path')
-const {config} = require('../config/base_config')
+const {config} = require('../config')
 const {extractDocumentation} = require('../config/parse_directives')
 const {escapeDoubleQuotes} = require('../utils/misc')
 const {

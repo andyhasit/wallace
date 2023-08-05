@@ -1,11 +1,11 @@
 import {load, Component} from '../utils'
 
 
-const TestComponent = Component.__ex__(html`
+const TestComponent =
   <div>
-    Title: {..title} <a href="#more">Read more</a> Written by {..author}
+    Title: {p.title} <a href="#more">Read more</a> Written by {p.author}
   </div>
-`)
+
 
 const props = {title: 'Flowers for Algernon', author: 'Daniel Keyes'}
 
@@ -13,7 +13,10 @@ test('Can have inlines in non-leaf nodes', () => {
   const div = load(TestComponent, props)
   expect(div).toShow(`
     <div>
-      Title: Flowers for Algernon <a href="#more">Read more</a> Written by Daniel Keyes
+    Title: 
+      <text>Flowers for Algernon</text>
+      <a href="#more">Read more</a>
+      Written by <text>Daniel Keyes</text>
     </div>
   `)
 })
