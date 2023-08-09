@@ -20,7 +20,7 @@ if (fs.existsSync(customConfigFile)) {
 
   var customConfig = require(customConfigFile)
   if (customConfig.directives) {
-    console.log(customConfig.directives)
+    // console.log(customConfig.directives)
     Object.assign(config.directives, customConfig.directives)
   }
   // TODO: check options are valid.

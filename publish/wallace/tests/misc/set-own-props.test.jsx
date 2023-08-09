@@ -1,6 +1,6 @@
-import {load, define} from '../utils'
+import {load} from '../utils'
 
-const ComponentWithOwnProps = define({
+const ComponentWithOwnProps = Component.define({
   afterInit() {
     this.props = {name: 'jo'}
   }},
@@ -16,11 +16,11 @@ test("Mounted component can create own props", () => {
   `)
 })
 
-const Component1 = define(
+const Component1 =
   <div>
     <ComponentWithOwnProps />
   </div>
-)
+
 
 test("Nested component can create own props", () => {
   const div = load(Component1)

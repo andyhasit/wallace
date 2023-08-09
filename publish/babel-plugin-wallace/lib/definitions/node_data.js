@@ -96,7 +96,7 @@ class NodeData {
     // if (poolDef.startsWith('@')) {
     //   poolStatement = this.expandDots(poolDef.substr(1))
     // } else {
-      console.log(key)
+    // console.log(key)
       if (key) {
         const keyFn = `function(props) {return props.${key}}`
         poolStatement = `component.pool(${poolDef}, ${keyFn})`

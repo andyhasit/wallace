@@ -1,19 +1,15 @@
-import { h } from '../../src/utils'
-import {load, define} from '../utils'
+import {h, load} from '../utils'
 
 
-const TestComponent = define(
+const TestComponent =
   <div _swap={p.choice|mappings|myFallback}></div>
-)
 
-
-const ComponentA = define(
+const ComponentA =
   <span>A</span>
-)
 
-const ComponentB = define(
+const ComponentB =
   <span>B</span>
-)
+
 
 const mappings = {
   a: ComponentA,

@@ -1,6 +1,6 @@
-import {load, define} from '../utils'
+import {load} from '../utils'
 
-const TestComponent = define({
+const TestComponent = Component.define({
   afterInit() {
     console.log(this)
     this.el.label.text('Name:').css('bold')

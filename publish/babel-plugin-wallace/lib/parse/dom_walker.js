@@ -40,7 +40,7 @@ class DomWalker {
    * TODO: flesh this out to print more useful info.
    */
   throw(message) {
-    console.log(this.currentNode)
+    // console.log(this.currentNode)
     new Error(message)
   }
 }

@@ -1,15 +1,20 @@
-import {c, load, Component} from '../utils'
+import {load} from './utils'
 
 const show = false
 const props = {name: 'bob'}
 const service = {name: 'jane'}
 
-const TestComponent =
+const BaseComponent =
   <div id="test">
     <span>hello {p.name}</span>
     <span>{service.name}</span>
     <span _show={show}>hide me</span>
   </div>
+
+
+const TestComponent = Component.define({
+  _base: BaseComponent
+})
 
 
 test('Renders correctly', () => {

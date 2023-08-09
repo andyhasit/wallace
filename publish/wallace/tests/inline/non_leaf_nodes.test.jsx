@@ -1,4 +1,4 @@
-import {load, Component} from '../utils'
+import {load} from '../utils'
 
 
 const TestComponent =

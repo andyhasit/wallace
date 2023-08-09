@@ -5,14 +5,6 @@ const { insertStatementsAfter } = require('./utils/babel')
 
 const JSX_KEYS = ['html', 'stubs']
 
-const isDefineCallExpression = (node) => {
-  return (
-    node?.type === 'CallExpression' && 
-    node.callee?.type === 'Identifier' &&
-    node.callee.name === 'define'
-  )
-}
-
 
 
 
@@ -72,6 +64,7 @@ class JSXInDirectAssignment extends BaseJSXContextHandler {
 }
 
 
+
 /**
  * Handles JSXElement in the following context:
  * 
@@ -79,9 +72,18 @@ class JSXInDirectAssignment extends BaseJSXContextHandler {
  *   const MyComponent = define({...}, JSXElement)
  * 
  */ 
-class JSXInDefineCallArg extends BaseJSXContextHandler {
+class JSXInComponentDefineCallArg extends BaseJSXContextHandler {
   matches() {
-    return isDefineCallExpression(this.path.parent)
+    const parent = this.path.parent
+    if (
+      parent.type == 'CallExpression' &&
+      parent.callee?.type == 'MemberExpression' &&
+      parent.callee?.object?.name == 'Component' &&
+      parent.callee?.property?.name == 'define'
+    ) {
+      return true
+    }
+    return false
   }
   handle() {
     const JSXElementPath = this.path
@@ -116,10 +118,12 @@ class JSXInDefineCallArg extends BaseJSXContextHandler {
 class JSXInDefineCallObject extends BaseJSXContextHandler {
   matches() {
     return (
-      this.path.parent?.type === 'ObjectProperty' && 
+      false
+      // this.path.parent?.type === 'ObjectProperty' 
+      // && 
       // for class just add  
       // this.path.parent.key.name == '_stubs' &&
-      isDefineCallExpression(this.path.parentPath?.parentPath?.parentPath?.node)
+      // isComponentDefineCall(this.path.parentPath?.parentPath?.parentPath)
     )
   }
   handle() {
@@ -196,7 +200,7 @@ class JSXInDefineCallObject extends BaseJSXContextHandler {
     // JSXElementPath.remove()
     // ObjectExpressionPath.replaceWithSourceString('2')
     // ObjectExpressionPath.remove()
-    console.log(componentName)
+    // console.log(componentName)
 
   }
 }
@@ -317,7 +321,7 @@ class JSXInClassStub extends BaseJSXContextHandler {
 module.exports = {
   jsxContextClasses: [
     JSXInDirectAssignment,
-    JSXInDefineCallArg,
+    JSXInComponentDefineCallArg,
     JSXInDefineCallObject,
     // JSXInObjectHtml,
     // JSXInObjectStub,

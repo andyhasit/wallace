@@ -444,7 +444,7 @@ Lookup.prototype = {
       let o = component.__ov[key];
       // TODO: is this checking for watchOnce?
       o = und(o) ? '' : o; 
-      console.log(key);
+      // console.log(key)
       const n = this.callbacks[key](component, component.props);
       const c = n !== o;
       component.__ov[key] = n;

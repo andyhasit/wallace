@@ -1,11 +1,9 @@
-import {load, define} from '../utils'
+import {load} from '../utils'
 
 
-const Container = define(
-    <div _use={Child} _items={p}></div>
-)
+const Container = <div _use={Child} _items={p}></div>
 
-const Child = define(<div>{p}</div>)
+const Child = <div>{p}</div>
 
 
 test('Initial load works', () => {
