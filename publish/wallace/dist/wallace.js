@@ -442,7 +442,9 @@ Lookup.prototype = {
       // Verbose but efficient way as it avoids lookups?
       // Or is this harmful to performance because we're just reading values more than calling functions?
       let o = component.__ov[key];
+      // TODO: is this checking for watchOnce?
       o = und(o) ? '' : o; 
+      console.log(key);
       const n = this.callbacks[key](component, component.props);
       const c = n !== o;
       component.__ov[key] = n;
@@ -475,6 +477,22 @@ function Component(parent) {
   s.__nv = [];             // Nested components
   s.__ov = {};             // The old values for watches to compare against
 } 
+
+
+Component.define = function(opts) {
+  var base = opts._base || this;
+  // TODO: do we care about allowing this?
+  // var NewComponent = opts.hasOwnProperty('constructor') ? opts.constructor : function(parent) {
+  var NewComponent = function(parent) {
+    base.call(this, parent);
+  };
+  delete opts._base;
+  NewComponent.prototype = Object.create(base && base.prototype, {
+    constructor: { value: NewComponent, writable: true, configurable: true }
+  });
+  Object.assign(NewComponent.prototype, opts);
+  return NewComponent
+};
 
 
 var proto = Component.prototype;
@@ -692,7 +710,8 @@ proto.__ni = function(path, cls) {
  * @param {object} [prototypeExtras] - an object with extra things to be added to the prototype
  * @param {function} [prototypeExtras] - the function to be used as constructor
  */
-Component.prototype.__ex = function(baseClass, prototypeExtras, constructorFunction) {
+proto.__ex = function(baseClass, prototypeExtras, constructorFunction) {
+  // const base = baseClass || Component
   var subClass = constructorFunction || function(parent) {
     baseClass.call(this, parent);
   };

@@ -6,7 +6,6 @@ import {
   h, 
   createComponent, 
   mount,
-  define,
   Component, 
   SequentialPool, 
   Wrapper
@@ -105,7 +104,6 @@ module.exports = {
   load,
   mount,
   TestMount,
-  define,
   Component,
   SequentialPool,
   Wrapper

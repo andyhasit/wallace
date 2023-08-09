@@ -5,45 +5,35 @@
 
 const {jsxContextClasses} = require('./jsx_contexts')
 const {allValuesAreJSX, removeNode} = require('./utils/babel')
-
+const template = require('@babel/template').default
 const imports = []
 
-module.exports = () => {
+const needsImport = []
+
+
+const importWallaceComponent = (t) => {
+  const specifiers = [
+    t.ImportSpecifier(t.Identifier("Component"), t.Identifier("Component"))
+  ]
+  return t.ImportDeclaration(specifiers, t.stringLiteral('wallace'))
+  // return template("import {Component} from 'wallace'")()
+}
+
+module.exports = ({ types: t }) => {
   return {
     visitor: {
-      // ImportDeclaration: {
-      //   exit(path) {
-      //     // console.log(path.node.source);
-      //     // specifiers: {component, mount}
-      //     // source: "wallace"
-      //     console.log(path);
-      //   }
-      // },
-      // ImportDeclaration({ node }) {
-      //   const modulePath = node.source.value;
-      //   node.specifiers.forEach(specifier => {
-      //     const alias = specifier.local.name;
-      //     let name;
-      //     switch (specifier.type) {
-      //       case 'ImportSpecifier':
-      //         name = specifier.imported.name;
-      //         break;
-      //       case 'ImportDefaultSpecifier':
-      //         name = 'default';
-      //         break;
-      //       case 'ImportNamespaceSpecifier':
-      //         name = '*';
-      //         break;
-      //     }
-      //     if (name) {
-      //       imports.push({
-      //         alias,
-      //         name,
-      //         source: modulePath,
-      //       });
-      //     }
-      //   });
-      // },
+      Program: {
+        exit(path) {
+          const filename = path.hub.file.opts.filename
+          if (needsImport.includes(filename)) {
+            // TODO: check if already imported
+            path.unshiftContainer('body', importWallaceComponent(t))
+          }
+        }
+      },
+      ImportDeclaration(path) {
+        // Maybe use this to identify files with Component import so it's not imported twice?
+      },
       JSXElement(path) {
         // We use the root JSX element as entry point, regardless of where it is found.
         // The context handler will delete this node, and potentially code above it, so
@@ -56,12 +46,15 @@ module.exports = () => {
         if (contextMatches.length === 0) {
           // if (config.strict)...
           // console.log(path.parent)
-          // throw path.buildCodeFrameError("Found JSX in a place Wallace doesn't know how to handle.")
+          throw path.buildCodeFrameError("Found JSX in a place Wallace doesn't know how to handle.")
         }
         if (contextMatches.length > 1) {
           const contextNames = contextMatches.map(cls => cls.name)
           throw path.buildCodeFrameError(`JSX matches multiple contexts (${contextNames}). Please report this to wallace!`)
         }
+
+        const program = path.findParent((path) => path.type == 'Program')
+        needsImport.push(program.hub.file.opts.filename)
       },
       ObjectExpression: {
         exit(path) {

@@ -25,6 +25,22 @@ export function Component(parent) {
 } 
 
 
+Component.define = function(opts) {
+  var base = opts._base || this
+  // TODO: do we care about allowing this?
+  // var NewComponent = opts.hasOwnProperty('constructor') ? opts.constructor : function(parent) {
+  var NewComponent = function(parent) {
+    base.call(this, parent)
+  }
+  delete opts._base
+  NewComponent.prototype = Object.create(base && base.prototype, {
+    constructor: { value: NewComponent, writable: true, configurable: true }
+  })
+  Object.assign(NewComponent.prototype, opts)
+  return NewComponent
+}
+
+
 var proto = Component.prototype
 
 proto.onUpdate = noop

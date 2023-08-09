@@ -56,20 +56,20 @@ class BaseJSXContextHandler {
  * 
  *   const MyComponent = <div>...</div>
  */ 
-// class JSXInDirectAssignment extends BaseJSXContextHandler {
-//   matches() {
-//     return this.path.parent?.type === 'VariableDeclarator'
-//   }
-//   handle() {
-//     // TODO: add an import to define.
-//     const nodeToInsertAfter = this.path.parentPath.parentPath
-//     const componentName = this.path.parentPath.node.id.name
-//     const parser = new JSXParser(this.path, componentName, false)
-//     const statements = parser.collectStatements()
-//     this.path.replaceWithSourceString(`Component.prototype.__ex(Component)`)
-//     insertStatementsAfter(nodeToInsertAfter, statements)
-//   }
-// }
+class JSXInDirectAssignment extends BaseJSXContextHandler {
+  matches() {
+    return this.path.parent?.type === 'VariableDeclarator'
+  }
+  handle() {
+    // TODO: add an import to define.
+    const nodeToInsertAfter = this.path.parentPath.parentPath
+    const componentName = this.path.parentPath.node.id.name
+    const parser = new JSXParser(this.path, componentName, false)
+    const statements = parser.collectStatements()
+    this.path.replaceWithSourceString(`Component.define({})`)
+    insertStatementsAfter(nodeToInsertAfter, statements)
+  }
+}
 
 
 /**
@@ -316,9 +316,9 @@ class JSXInClassStub extends BaseJSXContextHandler {
 
 module.exports = {
   jsxContextClasses: [
+    JSXInDirectAssignment,
     JSXInDefineCallArg,
     JSXInDefineCallObject,
-    // JSXInDirectAssignment,
     // JSXInObjectHtml,
     // JSXInObjectStub,
     // JSXInClassHtml,

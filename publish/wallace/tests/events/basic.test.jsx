@@ -1,4 +1,4 @@
-import {c, h, load, Component} from '../utils'
+import {load, Component} from '../utils'
 
 const data = {
   clicks: 0
@@ -7,9 +7,10 @@ const data = {
 let args = undefined
 
 const TestComponent =
-    <div>
-      <button _el={btn} _onclick={clicked(w, e, p, c)}>Go</button>
-    </div>
+  <div>
+    <button _el={btn} _onclick={clicked(w, e, p, c)}>Go</button>
+  </div>
+
 
 const clicked = (w, e, p, c) => {
   p.clicks ++
