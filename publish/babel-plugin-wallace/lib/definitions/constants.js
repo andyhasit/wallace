@@ -28,6 +28,9 @@ const lookupCallbackArgs = 'c, p'
 const propsCallbackArgs = 'c, p'
 const eventCallbackArgs = 'w, e'
 
+const watchAlways = '1';
+const watchNever = '0';
+
 /**
  * The name of the arg representing the component in the buildComponent method.
  */
@@ -47,6 +50,8 @@ FrameworkError.prototype = new Error();
 module.exports = {
   EOL,
   callableWatchArgs,
+  watchAlways,
+  watchNever,
   FrameworkError,
   eventCallbackArgs,
   wallaceDefs, 

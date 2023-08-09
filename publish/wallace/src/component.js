@@ -240,7 +240,7 @@ proto.__ni = function(path, cls) {
  * @param {object} [prototypeExtras] - an object with extra things to be added to the prototype
  * @param {function} [prototypeExtras] - the function to be used as constructor
  */
-Component.prototype.__ex = function(baseClass, prototypeExtras, constructorFunction) {
+proto.__ex = function(baseClass, prototypeExtras, constructorFunction) {
   // const base = baseClass || Component
   var subClass = constructorFunction || function(parent) {
     baseClass.call(this, parent)

@@ -1,43 +1,49 @@
+/**
+ * 
+ * "Container is falsy" usually means you're trying to do an operation on a node that was deleted.
+ */
+
 const {jsxContextClasses} = require('./jsx_contexts')
+const {allValuesAreJSX, removeNode} = require('./utils/babel')
 
 const imports = []
 
 module.exports = () => {
   return {
     visitor: {
-      ImportDeclaration: {
-        exit(path) {
-          // console.log(path.node.source);
-          // specifiers: {component, mount}
-          // source: "wallace"
-          console.log(path);
-        }
-      },
-      ImportDeclaration({ node }) {
-        const modulePath = node.source.value;
-        node.specifiers.forEach(specifier => {
-          const alias = specifier.local.name;
-          let name;
-          switch (specifier.type) {
-            case 'ImportSpecifier':
-              name = specifier.imported.name;
-              break;
-            case 'ImportDefaultSpecifier':
-              name = 'default';
-              break;
-            case 'ImportNamespaceSpecifier':
-              name = '*';
-              break;
-          }
-          if (name) {
-            imports.push({
-              alias,
-              name,
-              source: modulePath,
-            });
-          }
-        });
-      },
+      // ImportDeclaration: {
+      //   exit(path) {
+      //     // console.log(path.node.source);
+      //     // specifiers: {component, mount}
+      //     // source: "wallace"
+      //     console.log(path);
+      //   }
+      // },
+      // ImportDeclaration({ node }) {
+      //   const modulePath = node.source.value;
+      //   node.specifiers.forEach(specifier => {
+      //     const alias = specifier.local.name;
+      //     let name;
+      //     switch (specifier.type) {
+      //       case 'ImportSpecifier':
+      //         name = specifier.imported.name;
+      //         break;
+      //       case 'ImportDefaultSpecifier':
+      //         name = 'default';
+      //         break;
+      //       case 'ImportNamespaceSpecifier':
+      //         name = '*';
+      //         break;
+      //     }
+      //     if (name) {
+      //       imports.push({
+      //         alias,
+      //         name,
+      //         source: modulePath,
+      //       });
+      //     }
+      //   });
+      // },
       JSXElement(path) {
         // We use the root JSX element as entry point, regardless of where it is found.
         // The context handler will delete this node, and potentially code above it, so
@@ -49,13 +55,23 @@ module.exports = () => {
         }
         if (contextMatches.length === 0) {
           // if (config.strict)...
+          // console.log(path.parent)
           // throw path.buildCodeFrameError("Found JSX in a place Wallace doesn't know how to handle.")
         }
         if (contextMatches.length > 1) {
           const contextNames = contextMatches.map(cls => cls.name)
           throw path.buildCodeFrameError(`JSX matches multiple contexts (${contextNames}). Please report this to wallace!`)
         }
+      },
+      ObjectExpression: {
+        exit(path) {
+          if (allValuesAreJSX(path.node)) {
+            // This means it is a stub, and all its JSX will have been handled already as
+            // th
+            path.remove()
+          }
+        }
       }
-    }
+    },
   }
 }

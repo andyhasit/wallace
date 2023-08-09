@@ -6,7 +6,8 @@ const {
   propsCallbackArgs,
   watchCallbackArgsWithValue,
   watchCallbackArgsWithoutValue,
-  FrameworkError
+  watchAlways,
+  watchNever
 } = require('../definitions/constants')
 
 const {DomWalker} = require('../parse/dom_walker.js')
@@ -196,7 +197,7 @@ class CodeGenerator {
     const callbackLinesroupedByWatchedField = groupArray(watches, 'watch', details => details)
     for (let [watch, lines] of Object.entries(callbackLinesroupedByWatchedField)) {
       this.addWatchQueryCallback(watch)
-      let callbackArgs = watch === '*' ? watchCallbackArgsWithoutValue : watchCallbackArgsWithValue
+      let callbackArgs = watch === watchAlways ? watchCallbackArgsWithoutValue : watchCallbackArgsWithValue
       let callback = this.buildWatcherCallbackFunction(callbackArgs, lines)
       callbacksObject.add(watch, callback)
     }
@@ -308,7 +309,7 @@ class CodeGenerator {
     this.savedElements.add(saveAs, `${initCall}${chainedCallStatement}`)
   }
   addWatchQueryCallback(watch) {
-    if (watch !== '*') {
+    if (watch !== watchAlways) {
       this.addLookupEntry(watch, watch)
     }
   }
@@ -323,7 +324,7 @@ class CodeGenerator {
 
     Same will happen with callbacks?
     */
-    const callback = (watch === '' || watch === undefined) ?
+    const callback = (watch === watchNever || watch === undefined) ?
       `function() {return null}` :
       `function(${lookupCallbackArgs}) {return ${statement}}`
     this.protoLookupCallbacks.add(watch, callback)

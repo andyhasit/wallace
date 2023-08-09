@@ -1,19 +1,19 @@
-import {c, load, Component, Wrapper} from '../utils'
+import {load, define} from '../utils'
 
-class TestComponent extends Component {
-  __html__ = html`
-    <div>
-      <span :el="label"></span>
-      <input :el="nameInput">
-      <span :el="test"></span>
-    </div>
-  `
-  init() {
+const TestComponent = define({
+  afterInit() {
+    console.log(this)
     this.el.label.text('Name:').css('bold')
     this.el.nameInput.value('Bob')
     this.el.test.text(this.el.nameInput.getValue())
-  }
-}
+    }
+  },
+  <div>
+    <span _el="label"></span>
+    <input _el="nameInput"/>
+    <span _el="test"></span>
+  </div>   
+)
 
 
 test('Misc wrapper properties', () => {

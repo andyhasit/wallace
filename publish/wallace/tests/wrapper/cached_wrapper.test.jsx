@@ -1,13 +1,12 @@
-import {c, load, Component, Wrapper} from '../utils'
-import {KeyedPool, SequentialPool} from '../../src/index'
+import {load, define} from '../utils'
 
-class Container extends Component {
-  __html__ = '<div :use="Child" :items="*|.props"></div>'
-}
 
-class Child extends Component {
-  __html__ = '<div>{.props}</div>'
-}
+const Container = define(
+    <div _use={Child} _items={p}></div>
+)
+
+const Child = define(<div>{p}</div>)
+
 
 test('Initial load works', () => {
   const div = load(Container, [1, 5, 2, 6])

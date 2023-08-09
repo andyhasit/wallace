@@ -21,13 +21,16 @@ const div = document.getElementById('main')
 const StopWatch = 
   <div _help>
     <h2>Stopwatch</h2>
-    <span>{ticks| Math.round(n / 10)}:{ticks % 10}</span>
+    <span>{ticks}s</span>
+    {/* <span>{ticks| Math.round(n / 10)}:{ticks % 10}</span> */}
   </div>
 
 
+    {/* <span>{seconds}</span> */}
+
 const stopwatch = mount('main', StopWatch, {clicks: 0})
 
-const interval = setInterval(() => {
-  ticks += 1;
-  stopwatch.update()
-}, 100)
+// const interval = setInterval(() => {
+//   ticks += 1;
+//   stopwatch.update()
+// }, 100)

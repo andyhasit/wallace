@@ -1,18 +1,86 @@
-import {mount, Component} from 'wallace'
-import {Component} from 'wallace'
+import {mount, define} from 'wallace'
 
 
-const ff = () => {false}
+// const TestComponent = define(
+//   <div id="test">
+//     <Foo/>
+//   </div>
+// )
 
-// ff()
-const Foo =
-  [<span>yo</span>]
+// const methods = {
+//   shout: (n) => {
+//     console.log(this.name)
+//   }
+// }
+
+// const SimpleProto = define(
+//   // <div id="test">
+//   //   <Foo/>
+//   // </div>,
+//   {
+//     base: TestComponent,
+//     proto: methods
+//   }
+// )
+
+// const SimpleProto2 = define({
+//     base: SimpleProto,
+//     proto: methods
+//   },
+//   <div id="test">
+//     <Foo/>
+//   </div>
+// )
 
 
-const TestComponent =
-  <div id="test">
-    <Foo/>
-  </div>
 
 
-mount(TestComponent)
+// SimpleProto2.prototype.bar = () => {
+//   this.seconds += 1
+// }
+
+// const Foo = component(
+//   <span>yo</span>
+// )
+
+// const Bar =
+//   <span>yo</span>
+
+
+
+
+// const WithStubs = define(
+//   {
+//     base: SimpleProto,
+//     proto: methods
+//   },
+//   {
+//     footer: 
+//       <footer>
+//         <span>888</span>
+//       </footer>,
+//     header: 
+//       <span></span>
+//   },
+//   <div id="test">
+//     <Foo/>
+//   </div>
+// )
+
+const WithStubs2 = define(
+  // <span></span>,
+  {
+    foo: <this.partial.footer />
+    // footer: 
+    //   <footer>
+    //     <xxx.foo/>
+    //     <span>888</span>
+    //   </footer>,
+    // header: 
+    //   <span></span>
+    // , header3: 
+    //   <span></span>
+  }
+)
+  
+mount(Foo)

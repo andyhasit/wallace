@@ -1,19 +1,19 @@
 import { h } from '../../src/utils'
-import {c, load, Component} from '../utils'
+import {load, define} from '../utils'
 
 
-class TestComponent extends Component {
-  __html__ = `<div :swap="..choice|mappings|myFallback"></div>`
-}
+const TestComponent = define(
+  <div _swap={p.choice|mappings|myFallback}></div>
+)
 
 
-class ComponentA extends Component {
-  __html__ = `<span>A</span>`
-}
+const ComponentA = define(
+  <span>A</span>
+)
 
-class ComponentB extends Component {
-  __html__ = `<span>B</span>`
-}
+const ComponentB = define(
+  <span>B</span>
+)
 
 const mappings = {
   a: ComponentA,

@@ -1,6 +1,17 @@
 const babel = require('@babel/core')
 const {wallaceDefs} = require("../definitions/constants")
 
+
+const removeNode = (anyParent, nodeToRemove) => {
+  const Visitor = {}
+  Visitor[nodeToRemove.type] = (path) => {
+    if (path.start === nodeToRemove.start) {
+      path.remove()
+    }
+  }
+  anyParent.traverse(Visitor)
+}
+
 /**
  * A visitor which removes a property, because that's how Babel wants you to do it.
  */
@@ -58,9 +69,26 @@ const insertStatementsAfter = (path, statements) => {
   )
 }
 
+const allValuesAreJSX = (objectExpressionNode) => {
+  // objectExpressionNode.properties.forEach(element => {
+  //   // htmlStrings[element.key.name] = getNodeHtmlString(element.value)
+  //   console.log(element.key.name) //] = getNodeHtmlString(element.value)
+  //   console.log(element.value.node)
+  //   // console.log(element.value.parentPath)
+  // })
+  properties = objectExpressionNode.properties
+  const jsxElements = properties.filter(
+    element => element.value.type === 'JSXElement'
+  ).length
+  return (jsxElements && jsxElements == properties.length)
+}
+
+
 module.exports = {
+  allValuesAreJSX,
   getNodeHtmlString,
   getNodeHtmlObjectOfStrings,
   insertStatementsAfter,
+  removeNode,
   removeWallaceDefs
 }

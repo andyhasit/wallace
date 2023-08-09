@@ -38,7 +38,6 @@ class JSXParser {
       // The address of the current node processed e.g. [1, 3, 0]
       this._nodeTreeAddress = []
       this._rootElement = undefined
-      this._processAsStub = false
       this._generator = new CodeGenerator(this._componentName, this._processAsStub)
   
       this._walkJSXTree(this._path.node, undefined)
@@ -80,6 +79,8 @@ class JSXParser {
           te.textContent = this._readCode(astNode)
           return te
         case 'JSXElement':
+
+          // console.log(1256, astNode)
           const openingElement = astNode.openingElement
           const tagName = openingElement.name.name
           const attributes = openingElement.attributes
@@ -89,7 +90,7 @@ class JSXParser {
           this._extractAttributes(domElement, attributes)
           return domElement
         default:
-          console.log(astNode)
+          // console.log(astNode)
           throw new Error('Unexpected node type: ' + astNode.type)
       }
     }
@@ -102,9 +103,10 @@ class JSXParser {
           name = ':' + name.slice(1)
           if (rest.startsWith("{")) {
             rest = rest.slice(1, - 1)
+        
+          } else {
+            rest = trimChar(rest, '"')
           }
-        } else {
-          rest = trimChar(rest, '"')
         }
         domElement.setAttribute(name, rest)
       })
@@ -151,7 +153,7 @@ class JSXParser {
             children.push(child)
             break
           default:
-            console.log(astNode)
+            // console.log(astNode)
             throw new Error('Unexpected node type: ' + child.type)
         }
       })

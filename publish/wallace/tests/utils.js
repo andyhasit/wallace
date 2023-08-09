@@ -5,7 +5,8 @@ import {diff} from 'jest-diff'
 import {
   h, 
   createComponent, 
-  mount, 
+  mount,
+  define,
   Component, 
   SequentialPool, 
   Wrapper
@@ -104,6 +105,7 @@ module.exports = {
   load,
   mount,
   TestMount,
+  define,
   Component,
   SequentialPool,
   Wrapper
