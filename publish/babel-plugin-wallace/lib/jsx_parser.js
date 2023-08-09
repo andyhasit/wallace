@@ -52,14 +52,8 @@ class JSXParser {
       this._nodeTreeAddress.push(i)
     }
     const domElement = this._convertToDomElement(astNode)
-    const childAstNodes = this._squashChildren(astNode)
     // const [domElement, childAstNodes] = this._parseJSXElement(astNode)
     // console.log(domElement, this._nodeTreeAddress, childAstNodes.length)
-    if (this._rootElement) {
-      attachElement(this._rootElement, this._nodeTreeAddress, domElement)
-    } else {
-      this._rootElement = domElement
-    }
 
     // This is a temporary measure allowing us to reuse the functionality for HTML strings.
     const nodeData = extractNodeData(domElement, this._processAsStub)
@@ -67,6 +61,14 @@ class JSXParser {
       this._generator.processNodeWithDirectives(nodeData, this._nodeTreeAddress)
     }
 
+    // TODO: move to a DOMTree object with methods.
+    if (this._rootElement) {
+      attachElement(this._rootElement, this._nodeTreeAddress, domElement)
+    } else {
+      this._rootElement = domElement
+    }
+
+    const childAstNodes = this._squashChildren(astNode)
     childAstNodes.forEach((node, i) => this._walkJSXTree(node, i))
     this._nodeTreeAddress.pop()
   }

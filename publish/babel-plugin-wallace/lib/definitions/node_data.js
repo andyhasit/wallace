@@ -11,8 +11,8 @@ const {Watcher} = require('./watcher')
  * want to use in directives in config.
  */
 class NodeData {
-  constructor(node, processAsStub) {
-    this.node = node
+  constructor(element, processAsStub) {
+    this.element = element
     this.processAsStub = processAsStub
     this.stubName = undefined
     this.saveAs = undefined
