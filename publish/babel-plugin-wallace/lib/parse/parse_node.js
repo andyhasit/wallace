@@ -12,8 +12,8 @@ const {config} = require('../config')
  * @param {Object} domNode - a Babel AST node
  * @param {boolean} processAsStub - indicates whether we are processing a stub.
  */
-function extractNodeData(domNode, processAsStub) {
-  const nodeData = new NodeData(domNode, processAsStub)
+function extractNodeData(domNode, nodeTreeAddress) {
+  const nodeData = new NodeData(domNode, nodeTreeAddress)
   let hasData = false
 
   // First check for help, as there is potentially broken syntax further down

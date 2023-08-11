@@ -84,11 +84,17 @@ const allValuesAreJSX = (objectExpressionNode) => {
 }
 
 
+const readCode = (path, astNode) => {
+  return path.hub.file.code.substring(astNode.start, astNode.end)
+}
+
+
 module.exports = {
   allValuesAreJSX,
   getNodeHtmlString,
   getNodeHtmlObjectOfStrings,
   insertStatementsAfter,
   removeNode,
-  removeWallaceDefs
+  removeWallaceDefs,
+  readCode
 }

@@ -1,5 +1,5 @@
-const {getLookupArgs, stripHtml} = require('../utils/dom')
-const {escapeSingleQuotes, extractShieldCounts, groupArray, isUnd} = require('../utils/misc')
+const {getLookupArgs} = require('../utils/dom')
+const {extractShieldCounts, groupArray} = require('../utils/misc')
 const {
   componentRefInBuild, 
   lookupCallbackArgs,
@@ -10,8 +10,6 @@ const {
   watchNever
 } = require('../definitions/constants')
 
-const {DomWalker} = require('../parse/dom_walker.js')
-const {extractNodeData} = require('../parse/parse_node')
 const {
   ArrayStatement,
   CallStatement,
@@ -36,12 +34,11 @@ const vars = {
  *
  */
 class CodeGenerator {
-  constructor(className, processAsStub) {
+  constructor(className, rawHTML) {
     this.className = className
-    this.rawHTML = undefined
+    this.rawHTML = rawHTML
 
     this.prototypeVariable = `${className}_prototype`
-    this.processAsStub = processAsStub
     this.nextElementRefIndex = 0
     this.savedWatchCallArgs = []
 
@@ -85,14 +82,7 @@ class CodeGenerator {
     this.buildMethod.add(this.savedElements.buildAssign(`${componentRefInBuild}.el`))
     this.afterSave.forEach(i => this.buildMethod.add(i))
     // We do this at the end as the dom has been changed
-    const convertedHTML = this.buildHtmlString(this.rawHTML)
-    this.htmlString.set(`'${convertedHTML}'`)
-  }
-  /**
-   * Converts the raw HTML text from the DOM
-   */
-  buildHtmlString(rawHtml) {
-    return escapeSingleQuotes(stripHtml(rawHtml))
+    this.htmlString.set(`'${this.rawHTML}'`)
   }
   /**
    * Sets the shieldCounts, which has to be done after parsing as nodes
@@ -118,11 +108,10 @@ class CodeGenerator {
   /**
    * Processes a node which has directives, which could be a JSXElement, JSText or JSExpression?
    */
-  processNodeWithDirectives(nodeData, nodeTreeAddress) {
+  processNodeWithDirectives(nodeData) {
     let {
       additionalLookups,
-      afterSave,
-      beforeSave,
+      nodeTreeAddress,
       saveAs,
       props,
       shieldQuery,
@@ -296,14 +285,14 @@ class CodeGenerator {
     const initCall = `${componentRefInBuild}.__ni(${getLookupArgs(nodeTreeAddress)}, ${nestedComponentClass})`
     this.saveElement(saveAs, initCall, nodeData.chainedCalls)
   }
-  saveStub(stubName, nodeTreeAddress) {
-    if (!re_lnu.test(stubName)) {
-      this.walker.throw('Stub name may only contain letters numbers and underscores')
-    }
-    this.nestedComponentProps.add(stubName, new FunctionStatement(propsCallbackArgs, ['return c.props']))
-    const initCall = `${componentRefInBuild}.__ni(${getLookupArgs(nodeTreeAddress)}, this.__stubs__${stubName})`
-    this.saveElement(stubName, initCall, [])
-  }
+  // saveStub(stubName, nodeTreeAddress) {
+  //   if (!re_lnu.test(stubName)) {
+  //     this.walker.throw('Stub name may only contain letters numbers and underscores')
+  //   }
+  //   this.nestedComponentProps.add(stubName, new FunctionStatement(propsCallbackArgs, ['return c.props']))
+  //   const initCall = `${componentRefInBuild}.__ni(${getLookupArgs(nodeTreeAddress)}, this.__stubs__${stubName})`
+  //   this.saveElement(stubName, initCall, [])
+  // }
   saveElement(saveAs, initCall, chainedCalls) {
     const chainedCallStatement = chainedCalls.length ? '.' + chainedCalls.join('.') : ''
     this.savedElements.add(saveAs, `${initCall}${chainedCallStatement}`)

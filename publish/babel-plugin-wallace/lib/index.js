@@ -1,22 +1,10 @@
-/**
- * 
- * "Container is falsy" usually means you're trying to do an operation on a node that was deleted.
- */
-
-const {jsxContextClasses} = require('./jsx_contexts')
-const {allValuesAreJSX, removeNode} = require('./utils/babel')
-const template = require('@babel/template').default
-const imports = []
+const {jsxContextClasses} = require('./jsx/contexts')
 
 const needsImport = []
 
-
 const importWallaceComponent = (t) => {
-  const specifiers = [
-    t.ImportSpecifier(t.Identifier("Component"), t.Identifier("Component"))
-  ]
-  return t.ImportDeclaration(specifiers, t.stringLiteral('wallace'))
-  // return template("import {Component} from 'wallace'")()
+  const specifier = t.ImportSpecifier(t.Identifier("Component"), t.Identifier("Component"))
+  return t.ImportDeclaration([specifier], t.stringLiteral('wallace'))
 }
 
 module.exports = ({ types: t }) => {
@@ -44,8 +32,7 @@ module.exports = ({ types: t }) => {
           contextMatches[0].handle()
         }
         if (contextMatches.length === 0) {
-          // if (config.strict)...
-          // console.log(path.parent)
+          // TODO: if (config.strict)...
           throw path.buildCodeFrameError("Found JSX in a place Wallace doesn't know how to handle.")
         }
         if (contextMatches.length > 1) {
@@ -55,16 +42,7 @@ module.exports = ({ types: t }) => {
 
         const program = path.findParent((path) => path.type == 'Program')
         needsImport.push(program.hub.file.opts.filename)
-      },
-      ObjectExpression: {
-        exit(path) {
-          if (allValuesAreJSX(path.node)) {
-            // This means it is a stub, and all its JSX will have been handled already as
-            // th
-            path.remove()
-          }
-        }
       }
-    },
+    }
   }
 }

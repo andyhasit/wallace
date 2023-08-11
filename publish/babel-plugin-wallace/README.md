@@ -424,9 +424,6 @@ What order do I do things in:
 1. Fix always and never, so I can convert tests
 2. Convert tests
 
-* Find alternative to define
-* Convert tests
-
 Alternatives to `define` which is a js keyword:
 
 ```jsx
@@ -452,4 +449,20 @@ The problem with simpler syntax like direct assignment is that:
 1. People need to switch code structure and imports when changing things
 2. We need to ensure the import
 
-I also want to ensure that we can extend without JSX, and that people can actually call the function with internal args. Provided I can solve the import issue, I can have direct JSX assignment, and leave more complex cases to use `Box.def`
+I also want to ensure that we can extend without JSX, and that people can actually call the function with internal args. Provided I can solve the import issue, I can have direct JSX assignment, and leave more complex cases to use `Component.def`
+
+### Parsing and Generating
+
+* The index contains the visitor, which deals with top level entry into the AST.
+* JSXElements are handled by context handlers, which deal transforming the code.
+* The JSXParser returns the statements, it deals with walking the tree. It creates a CodeGenerator, and calls extractNodeData.
+
+
+
+JSXParser walks the tree, and calls extractsNodeData, which extracts directives which , and tells the code generator whenever it finds a dynamic node.
+
+It would maybe be simpler if the ` JSXParser` returned `ComponentDefinition` which has the html plus DynamicNodes collected.
+
+And rename to `ComponentCodeGenerator`.
+
+Maybe contexts should call `convertJSX` which takes JSX and returns code to insert. Maybe the parser should return a data structure

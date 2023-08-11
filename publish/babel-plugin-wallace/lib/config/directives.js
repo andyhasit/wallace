@@ -8,78 +8,78 @@ const componentRefVariable = 'c'; // The variable name by which the component wi
 
 
 const directives = {
-  ':bind': {
+  "bind": {
     params: 'watch, event?',
     handle: function(watch, event='change') {
       this.addWatch(watch, undefined, 'value')
       this.addEventListener(event, `${watch} = w.getValue()`)
     }
   },
-  ':checked': {
+  "checked": {
     params: 'watch, converter?',
     handle: function(watch, converter) {
       this.addWatch(watch, converter, 'checked')
     }
   },
-  ':css': {
+  "css": {
     params: 'watch, converter?',
     handle: function(watch, converter) {
       this.addWatch(watch, converter, 'css')
     }
   },
-  ':css-f': {
+  "css-f": {
     params: 'value',
     handle: function(value) {
       this.addWatch(watchNever, value, 'css')
     }
   },
-  ':el': {
+  "el": {
     handle: function(arg) {
       this.saveAs = arg
     }
   },
-  ':hide': {
+  "hide": {
     params: 'watch',
     handle: function(watch) {
       this.shieldQuery = watch
     }
   },
-  ':helper': {
+  "helper": {
     handle: function(watch, converter) {
       throw new RequestsHelp(helpTopic)
     }
   },
-  ':inner': {
+  "inner": {
     params: 'watch, converter',
     handle: function(watch, converter) {
       this.addWatch(watch, converter, 'inner')
     }
   },
-  ':items': {
+  "items": {
     params: 'watch, converter?',
     handle: function(watch, converter) {
       this.addWatch(watch, converter, 'items', componentRefVariable)
     }
   },
-  ':on': {
+  "on": {
     params: 'event, callbackStr',
     handle: function(event, callbackStr) {
       this.addEventListener(event, callbackStr)
     }
   },
-  ':pool': {
+  "pool": {
     params: 'poolInstance',
     handle: function(poolInstance) {
       this.chainedCalls.push(`pool(${poolInstance})`)
     }
   },
-  ':props': {
+  "props": {
     params: 'args',
     handle: function(args) {
       this.props = this.expandProps(args)
     }
   },
-  ':replace': {
+  "replace": {
     params: 'componentCls, props?',
     handle: function(componentCls, props) {
       this.replaceWith = componentCls
@@ -88,20 +88,20 @@ const directives = {
       }
     }
   },
-  ':show': {
+  "show": {
     params: 'watch',
     handle: function(watch) {
       this.shieldQuery = watch
       this.reverseShield = 1
     }
   },
-  ':stub': {
+  "stub": {
     params: 'stubName',
     handle: function(stubName) {
       this.stubName = stubName
     }
   },
-  ':swap': {
+  "swap": {
     params: 'watch, mappings, fallback?',
     handle: function(watch, mappings, fallback) {
       let args = this.expandDots(mappings)
@@ -112,25 +112,25 @@ const directives = {
       this.addWatch(watch, undefined, 'swap', componentRefVariable)
     }
   },
-  ':use': {
+  "use": {
     params: 'componentDef, key?',
     handle: function(componentDef, key) {
       this.chainedCalls.push(`pool(${this.buildPoolInit(componentDef, key)})`)
     }
   },
-  ':value': {
+  "value": {
     params: 'watch, converter?',
     handle: function(watch, converter) {
       this.addWatch(watch, converter, 'value')
     }
   },
-  ':watch': {
+  "watch": {
     params: 'watch, converter, wrapperMethod?',
     handle: function(watch, converter, wrapperMethod) {
       this.addWatch(watch, converter, wrapperMethod)
     }
   },
-  ':wrapper': {
+  "wrapper": {
     params: 'cls, args?',
     handle: function(cls, args) {
       this.customWrapperClass = cls
@@ -139,5 +139,6 @@ const directives = {
   }
 }
 
+// Do not import directly, only through index.
 module.exports = {directives}
 

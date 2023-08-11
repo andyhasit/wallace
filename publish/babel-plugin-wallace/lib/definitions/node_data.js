@@ -10,10 +10,12 @@ const {Watcher} = require('./watcher')
  * It also contains the directive syntax rules (expansion etc...) which we may
  * want to use in directives in config.
  */
+// ALternative names: DynamicNode, WrappedNode, SpecialNode
 class NodeData {
-  constructor(element, processAsStub) {
+  constructor(element, nodeTreeAddress) {
     this.element = element
-    this.processAsStub = processAsStub
+    this.processAsStub = false
+    this.nodeTreeAddress = nodeTreeAddress
     this.stubName = undefined
     this.saveAs = undefined
     this.customWrapperClass = undefined
