@@ -1,6 +1,6 @@
 import {load} from './utils'
 
-const show = false
+const show = true
 const props = {name: 'bob'}
 const service = {name: 'jane'}
 
@@ -23,7 +23,7 @@ test('Renders correctly', () => {
     <div id="test">
       <span>hello <text>bob</text></span>
       <span>jane</span>
-      <span class="hidden">hide me</span>
+      <span>hide me</span>
     </div>
   `)
 })

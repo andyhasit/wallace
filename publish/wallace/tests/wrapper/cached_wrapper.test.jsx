@@ -1,7 +1,10 @@
 import {load} from '../utils'
 
-
 const Container = <div _use={Child} _items={p}></div>
+// const Container = 
+//   <div>
+//     <Child _for={p} />
+//   </div>
 
 const Child = <div>{p}</div>
 

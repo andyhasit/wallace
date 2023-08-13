@@ -12,10 +12,11 @@ const {Watcher} = require('./watcher')
  */
 // ALternative names: DynamicNode, WrappedNode, SpecialNode
 class NodeData {
-  constructor(element, nodeTreeAddress) {
-    this.element = element
-    this.processAsStub = false
+  constructor(componentName, path, nodeTreeAddress) {
+    this.componentName = componentName
+    this.path = path
     this.nodeTreeAddress = nodeTreeAddress
+    this.processAsStub = false
     this.stubName = undefined
     this.saveAs = undefined
     this.customWrapperClass = undefined
@@ -30,6 +31,13 @@ class NodeData {
     this.afterSave = []
     this.additionalLookups = {}
     this.seq = 0
+  }
+  isDynamic() {
+    return (
+      this.watches.length > 0 || this.chainedCalls.length > 0 || this.beforeSave.length > 0 || this.afterSave.length > 0
+      || this.additionalLookups.length > 0 || this.props || this.shieldQuery || this.replaceWith || this.saveAs || 
+      this.customWrapperClass || this.customWrapperArgs 
+    )
   }
   /**
    * Creates a watch on this node.

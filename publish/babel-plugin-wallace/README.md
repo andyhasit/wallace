@@ -466,3 +466,18 @@ It would maybe be simpler if the ` JSXParser` returned `ComponentDefinition` whi
 And rename to `ComponentCodeGenerator`.
 
 Maybe contexts should call `convertJSX` which takes JSX and returns code to insert. Maybe the parser should return a data structure
+
+
+
+https://github.com/jamiebuilds/babel-handbook/blob/master/translations/en/plugin-handbook.md#-enabling-syntax-in-plugins
+
+
+
+## Rethink
+
+
+
+Using JSX is problematic as babel reads expressions as code and messes with the variables. Doing it as a html string is clunky as:
+
+1. It doesn't recognise JS inside, so no intellisense
+2. 

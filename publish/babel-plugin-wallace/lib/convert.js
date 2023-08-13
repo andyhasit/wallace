@@ -1,6 +1,6 @@
 const { parseJSX } = require('./jsx/parse.js')
 const { CodeGenerator } = require('./generate/code_generator')
-
+const {allVariableLetters} = require('./definitions/constants')
 
 const generatecomponentDefinitionArgs = (componentDefinition) => {
 
@@ -14,7 +14,11 @@ const generatecomponentDefinitionArgs = (componentDefinition) => {
 
 
 const convertJSX = (path, componentName) => {
-  return generatecomponentDefinitionArgs(parseJSX(path, componentName))
+  const parsedData = parseJSX(path, componentName)
+  for (const letter of allVariableLetters) {
+    delete path.scope.globals[letter]
+  }
+  return generatecomponentDefinitionArgs(parsedData)
 }
 
 

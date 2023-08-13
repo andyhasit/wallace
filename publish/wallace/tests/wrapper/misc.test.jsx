@@ -2,7 +2,6 @@ import {load} from '../utils'
 
 const TestComponent = Component.define({
   afterInit() {
-    console.log(this)
     this.el.label.text('Name:').css('bold')
     this.el.nameInput.value('Bob')
     this.el.test.text(this.el.nameInput.getValue())

@@ -22,6 +22,7 @@ const watchArgs = '(n, o)'
  *  component
  *  event
  */
+const allVariableLetters = ['n', 'o', 'w', 'p', 'c', 'e']
 const watchCallbackArgsWithValue = 'n, o, w, p, c'
 const watchCallbackArgsWithoutValue = 'w, p, c'
 const lookupCallbackArgs = 'c, p'
@@ -48,6 +49,7 @@ function RequestsHelp (topic) {
 FrameworkError.prototype = new Error();
 
 module.exports = {
+  allVariableLetters,
   EOL,
   callableWatchArgs,
   watchAlways,

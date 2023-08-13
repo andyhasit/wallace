@@ -13,10 +13,10 @@ class BaseJSXContextHandler {
   }
   matches() {
     // TODO create internal wallace error.
-    throw {message: 'Not implemented'}
+    throw new Error('Not implemented')
   }
   handle() {
-    throw {message: 'Not implemented'}
+    throw new Error('Not implemented')
   }
 }
 

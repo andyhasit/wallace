@@ -322,4 +322,4 @@ const parseInlineText = (inlineText) => {
   return {watchedProperties, chunks}
 }
 
-module.exports = {processInlineWatches}
+module.exports = {processInlineWatches, addInlineWatches}

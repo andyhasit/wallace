@@ -1,6 +1,5 @@
 const { JSXText } = require('@babel/types')
 const {readCode} = require('../utils/babel')
-const {trimChar} = require('../utils/misc')
 const {extractNodeData} = require('./extract')
 const {ComponentDOM} = require('./component_dom')
 
@@ -22,10 +21,15 @@ class JSXParser {
   }
   _walkJSXTree(astNode, i) {
     this._dom.push(i)
-    const {domElement, dynamicNode} = extractNodeData(this._path, astNode, this._dom.getCurrentAddress())
-    this._dom.attach(domElement)
-    if (dynamicNode) {
-      this.dynamicNodes.push(dynamicNode)
+    const {element, nodeData} = extractNodeData(
+      this._componentName, 
+      this._path,
+      astNode,
+      this._dom.getCurrentAddress()
+    )
+    this._dom.attach(element)
+    if (nodeData.isDynamic()) {
+      this.dynamicNodes.push(nodeData)
     }
     const childAstNodes = this._squashChildren(astNode)
     childAstNodes.forEach((node, i) => this._walkJSXTree(node, i))

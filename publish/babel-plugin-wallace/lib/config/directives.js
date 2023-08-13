@@ -139,6 +139,6 @@ const directives = {
   }
 }
 
-// Do not import directly, only through index.
+// Do not import directly, only through index so we get custom directives too.
 module.exports = {directives}
 

@@ -1,6 +1,8 @@
 const {JSDOM} = require( 'jsdom')
 const {readCode} = require('../utils/babel')
 const {config} = require('../config')
+const {NodeData} = require('../definitions/node_data')
+const {addInlineWatches} = require('../parse/inline_directives')
 const {processDirective} = require('../config/parse_directives')
 
 
@@ -10,162 +12,141 @@ const doc = dom.window.document
 const directives = config.directives
 
 
-const extractDynamicData = (path, astNode, domElement, nodeTreeAddress) => {
-  const nodeData = new NodeData(domElement, nodeTreeAddress)
-  let hasData = false
-
-  // Check attributes for directives
-  if (domElement.attributes && domElement.attributes.length > 0) {
-    for (let [directiveName, directive] of Object.entries(config.directives)) {
-      let attVal = getAttVal(domElement, directiveName)
-      if (attVal) {
-        // To deal with <use:Child/>
-        if (attVal.endsWith('/')) {
-          attVal = attVal.substring(0, attVal.length -1)
-        }
-        hasData = true
-        processDirective(nodeData, directiveName, directive, attVal)
-        removeAtt(domElement, directiveName)
-      }
-    }
+class BaseConverter {
+  constructor(componentName, path, astNode, nodeTreeAddress) {
+    this.componentName = componentName
+    this.path = path
+    this.astNode = astNode
+    this.nodeTreeAddress = nodeTreeAddress
+    this.nodeData = new NodeData(componentName, path, nodeTreeAddress)
+    this.element = undefined
   }
-
-  // Process event attributes, we need to call extractAtts() again.
-  const remainingAtts = extractAtts(domElement)
-  if (remainingAtts) {
-    for (let [key, value] of Object.entries(remainingAtts)) {
-      if (key.toLowerCase().startsWith(':on')) {
-        let event = key.substr(3)
-        let directive = {
-          params: 'callbackStr',
-          handle: function(callbackStr) {
-            this.addEventListener(event, callbackStr)
-          }
-        }
-        processDirective(nodeData, key, directive, value)
-        hasData = true
-        removeAtt(domElement, key)
-      }
-    }
+  readCode(astNode) {
+    return readCode(this.path, astNode)
   }
-
-  // Check inline calls
-  processInlineWatches(nodeData, domElement)
-  hasData = hasData || nodeData.watches.length > 0
-
-  return hasData ? nodeData : undefined
 }
 
 
+class JSXTextConverter extends BaseConverter {
+  convert() {
+    // expressions in text become JSXExpressionContainers, so there is never dynamic 
+    // data inside JSText.
+    this.element = doc.createTextNode(this.astNode.value)
+    addInlineWatches(this.nodeData, this.astNode.value, 'text', true)
+  }
+}
 
 
-const extractAttributes = (path, domElement, astAttributes) => {
-  
-  astAttributes.forEach(attr => {
-    const code = readCode(path, attr)
-    let [name, ...rest] = code.split('=')
-    rest = rest.join('=')
-    if (name.startsWith('_')) {
-      name = ':' + name.slice(1)
-      if (rest.startsWith("{")) {
-        rest = rest.slice(1, - 1)
-    
+class JSXExpressionConverter extends BaseConverter {
+  convert() {
+    // This only treats expressions in innerText, not attribute values.
+    this.element = doc.createElement('text')
+    this.element.textContent = '.'
+    const code = this.readCode(this.astNode.expression)
+    addInlineWatches(this.nodeData, `{${code}}`, 'text', true)
+  }
+}
+
+
+class JSXElementConverter extends BaseConverter {
+  convert() {
+    const openingElement = this.astNode.openingElement
+    const tagName = openingElement.name.name
+    // TODO: detect special tagname here.
+    this.element = doc.createElement(tagName)
+    openingElement.attributes.forEach(attr => {
+      
+      // TODO: this could be an expression!
+      let name = attr.name.name 
+      // console.log(name)
+      if (name.startsWith('__')) {
+        this.processNormalAttribute(attr, name.slice(1))
+      } else if (name.startsWith('_')) {
+        this.processDirective(attr, name.slice(1))      
       } else {
-        rest = trimChar(rest, '"')
+        this.processNormalAttribute(attr, name)
+      }
+    })
+  }
+  /**
+   * A normal attribute 
+   * 
+   *   <div class="foo">
+   *   <div class={foo}>
+   * 
+   * It may have directives inside the text: 
+   * 
+   *   <div class="{foo} bar">
+   * 
+   * This is a carry over from old HTML system, not sure if we're keeping it.
+   */
+  processNormalAttribute (att, name) {
+    const attValue = this.attValue(att, true)
+    /*
+    Find a better way to handle this, as it generates this if we don't change to css:
+
+      w["class"](n);
+
+    If we don't do this, which is not what we want.
+    */ 
+    let usedKey = name === 'class' ? 'css' : `@${name}`
+    const hasInlineDirective = addInlineWatches(this.nodeData, attValue, usedKey, false)
+
+    if (!hasInlineDirective) {
+      this.element.setAttribute(name, attValue)
+    }
+  }
+  getDirective = (name) => {
+    if (name.startsWith('on')) {
+      const event = name.slice(2)
+      return {
+        params: 'callbackStr',
+        handle: function(callbackStr) {
+          this.addEventListener(event, callbackStr)
+        }
       }
     }
-    domElement.setAttribute(name, rest)
-  })
-}
-
-
-const processJSXText = (astNode) => {
-  // expressions in text become JSXExpressionContainers, so there is never dynamic 
-  // data inside JSText.
-  return {
-    domElement: doc.createTextNode(astNode.value),
-    dynamicNode: undefined
+    return directives[name]
   }
-}
-
-
-const processJSXExpressionContainer = (path, astNode, nodeTreeAddress) => {
-  // This will only catch expressions in text, not attributes.
-  const domElement = doc.createElement('text')
-  domElement.textContent = '.'
-  // readCode(path, astNode)
-  // processInlineWatches(nodeData, domElement)
-  return {
-    domElement, dynamicNode: undefined
-  }
-}
-
-
-/**
- * A normal attribute may still have directives inside.
- */
-const processNormalAttribute = (domElement, path, attr, name) => {
-  switch (attr.value.type) {
-    case 'StringLiteral':
-      domElement.setAttribute(name, attr.value.value)
-      break
-    case 'JSXExpressionContainer':
-      console.log(attr)
-      break
-    default:
-      throw path.buildCodeFrameError(`Unexpected node type: ${attr.type}`)
-  }
-}
-
-const attValue = (path, attr) => {
-
-}
-
-
-const processAttributeDirective = (domElement, path, attr, name) => {
-  const directiveCallback = directives[name]
-  if (!directiveCallback) {
-    throw path.buildCodeFrameError(`Unknown directive: ${name}`)  
-  }
-  const nodeData = new NodeData(domNode, nodeTreeAddress)
-  processDirective(nodeData, name, directiveCallback, attValue(path, attr))
-}
-
-
-const processJSXElement = (path, astNode, nodeTreeAddress) => {
-  const openingElement = astNode.openingElement
-  const tagName = openingElement.name.name
-  // TODO: detect special tagname here.
-  const domElement = doc.createElement(tagName)
-  openingElement.attributes.forEach(attr => {
-    
-    let name = attr.name.name 
-
-    if (name.startsWith('__')) {
-      processNormalAttribute(domElement, path, attr, name.slice(1))
-    } else if (name.startsWith('_')) {
-      processAttributeDirective(domElement, path, attr, name.slice(1))      
-    } else {
-      processNormalAttribute(domElement, path, attr, name)
+  processDirective = (att, name) => {
+    const directiveCallback = this.getDirective(name.toLocaleLowerCase())
+    if (!directiveCallback) {
+      throw this.path.buildCodeFrameError(`Unknown directive: ${name}`)  
     }
-  })
-  return {
-    domElement, dynamicNode: undefined
+    // TODO: split into chunks here so we can raise error?
+    let attValue = this.attValue(att, false)
+    
+    processDirective(this.nodeData, name, directiveCallback, attValue)
+  }
+  attValue = (att, asInline) => {
+    const attValue = this.readCode(att.value)
+    if (attValue.startsWith('"') && attValue.endsWith('"')) {
+      return attValue.slice(1, -1)
+    }
+    if (!asInline && attValue.startsWith('{') && attValue.endsWith('}')) {
+      return attValue.slice(1, -1) 
+    }
+    // assert there is nothing weird?
+    return attValue
   }
 }
 
 
-const extractNodeData = (path, astNode, nodeTreeAddress) => {
-  switch (astNode.type) {
-    case 'JSXText':
-      return processJSXText(astNode)
-    case 'JSXExpressionContainer':
-      return processJSXExpressionContainer(path, astNode, nodeTreeAddress)
-    case 'JSXElement':
-      return processJSXElement(path, astNode, nodeTreeAddress)     
-    default:
-      throw path.buildCodeFrameError(`Unexpected node type: ${astNode.type}`)
+const converterClasses = {
+  JSXText: JSXTextConverter,
+  JSXExpressionContainer: JSXExpressionConverter,
+  JSXElement: JSXElementConverter
+}
+
+
+const extractNodeData = (componentName, path, astNode, nodeTreeAddress) => {
+  const cls = converterClasses[astNode.type]
+  if (!cls) {
+    throw this.path.buildCodeFrameError(`Unexpected node type: ${astNode.type}`)
   }
+  const converter = new cls(componentName, path, astNode, nodeTreeAddress)
+  converter.convert()
+  return {element: converter.element, nodeData: converter.nodeData}
 }
 
 
