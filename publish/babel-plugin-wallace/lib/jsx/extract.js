@@ -3,7 +3,6 @@ const {readCode} = require('../utils/babel')
 const {config} = require('../config')
 const {NodeData} = require('../definitions/node_data')
 const {addInlineWatches} = require('../parse/inline_directives')
-const {processDirective} = require('../config/parse_directives')
 
 
 const dom = new JSDOM('<!DOCTYPE html>')
@@ -11,6 +10,7 @@ const doc = dom.window.document
 const splitter = "-----"
 const directives = config.directives
 const isCapitalized = word => word[0] === word[0].toUpperCase()
+const onlyHas = (arr, item) => arr.length === 0 || arr.length === 1 && arr[0] === item
 
 
 class BaseConverter {
@@ -53,13 +53,37 @@ class JSXExpressionConverter extends BaseConverter {
 class JSXElementConverter extends BaseConverter {
   convert() {
     const openingElement = this.astNode.openingElement
-    const tagName = openingElement.name.name
+    let tagName = this.getTagName()
 
-    if (isCapitalized(tagName)) {
+    // Can't put error against attribute. Maybe I need to visit?
+    this.nodeData.attributes = openingElement.attributes.map(attr => new AttributeInfo(this.path, attr))
+    this.nodeData.attributeNames = this.nodeData.attributes.map(attr => attr.name)
+    
+    /*
+     TODO: resolve chicken and egg situation of determining whether it's a repeat or not.
+     I could either inject attributes, maybe "__nest__" and let the directives resolve everything.
 
+    */
+    const isRepeat = true // fudge
+
+    if (isCapitalized(tagName) || tagName.includes(".")) {
+      this.nodeData.nestedClass = tagName
+      if (isRepeat) {
+
+      } else {
+        // It is nested, so we only allow props and show/hide?
+        // Or no normal attributes, only directives, and only those allowed?
+        // if (!onlyHas(this.nodeData.attributeNames, "props")) {
+        //   throw this.path.buildCodeFrameError(`Nested components are only allowed "_props" attribute.`)
+        // }
+        // TODO: check there are is no nested DOM.
+        // tagName = "br"
+        this.nodeData.replaceWith = tagName
+        this.element = doc.createElement("br")
+      }
+    } else {
+      this.element = doc.createElement(tagName)
     }
-    // TODO: detect special tagname here.
-    this.element = doc.createElement(tagName)
 
 
     /*
@@ -74,9 +98,6 @@ class JSXElementConverter extends BaseConverter {
 
     */
 
-    // Can't put error against attribute. Maybe I need to visit?
-    this.nodeData.attributes = openingElement.attributes.map(attr => new AttributeInfo(this.path, attr))
-    this.nodeData.attributeNames = this.nodeData.attributes.map(attr => attr.name)
     this.nodeData.attributes.forEach(attr => {
       if (attr.isDirective) {
         this.processDirective(attr)
@@ -84,17 +105,16 @@ class JSXElementConverter extends BaseConverter {
         this.processNormalAttribute(attr.name, attr.value)
       }
     })
+
+    
+  }
+  getTagName() {
+    // if (this.astNode.openingElement.type === 'JSXMemberExpression'){}
+    // if (this.astNode.openingElement.type === 'JSXMemberExpression'){}
+    return this.readCode(this.astNode.openingElement.name)
   }
   processNormalAttribute(name, value) {
-    /*
-    Find a better way to handle this, as it generates this if we don't change to css:
-
-      w["class"](n);
-
-    If we don't do this, which is not what we want.
-    */ 
     const hasInlineDirective = addInlineWatches(this.nodeData, value, `@${name}`, false)
-
     if (!hasInlineDirective) {
       this.element.setAttribute(name, value)
     }
@@ -113,38 +133,40 @@ class JSXElementConverter extends BaseConverter {
   }
 }
 
-  /**
-   * A normal attribute looks like:
-   * 
-   *   <div name>
-   *   <div name="value">
-   *   <div name={expr}>
-   *   <div namespace:name>
-   *   <div __name>
-   * 
-   * The __ allows normal attributes with _ to not be treaded as directives, so it
-   * becomes this in the HTML: 
-   *  
-   *   <div _name>
-   * 
-   * A directive looks like:
-   * 
-   *   <div _name>
-   *   <div _name="value">
-   *   <div _name={expr}>
-   *   <div _namespace:name>
-   * 
-   * For now, normal attributes may have directives inside the text: 
-   * 
-   *   <div class="{foo} bar">
-   * 
-   * This is a carry over from old HTML system, not sure if we're keeping it.
-   */
+
+/**
+ * A normal attribute looks like:
+ * 
+ *   <div name>
+ *   <div name="value">
+ *   <div name={expr}>
+ *   <div namespace:name>
+ *   <div __name>
+ * 
+ * The __ allows normal attributes with _ to not be treaded as directives, so it
+ * becomes this in the HTML: 
+ *  
+ *   <div _name>
+ * 
+ * A directive looks like:
+ * 
+ *   <div _name>
+ *   <div _name="value">
+ *   <div _name={expr}>
+ *   <div _namespace:name>
+ * 
+ * For now, normal attributes may have directives inside the text: 
+ * 
+ *   <div class="{foo} bar">
+ * 
+ * This is a carry over from old HTML system, not sure if we're keeping it.
+ */
 class AttributeInfo {
   constructor(path, attr) {
     this.path = path
     this.astAttribute = attr
     this.name = undefined
+    this.nestedClass = undefined
     this.qualifier = undefined
     this.isDirective = false
     this.argType = undefined
@@ -167,7 +189,6 @@ class AttributeInfo {
       this.name = this.name.slice(1)
     } else if (this.name.startsWith('_')) {
       this.isDirective = true
-      this.name = this.name.slice(1)
     }
   }
   processValue() {

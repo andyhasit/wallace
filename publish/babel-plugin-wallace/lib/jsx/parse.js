@@ -5,7 +5,7 @@ const {ComponentDOM} = require('./component_dom')
 
 
 /**
- * This parses the JSX code, collecting dynamicNodes.
+ * This parses the JSX code to collect dynamicNodes and the html string.
  */
 class JSXParser {
   constructor(path, componentName) {
@@ -18,6 +18,7 @@ class JSXParser {
   }
   parse() {
     this._walkJSXTree(this._path.node, undefined)
+    // Determine this at the end rather than as we go, as directives may turn parent nodes dynamic.
     this.dynamicNodes = this._nodes.filter(node => node.isDynamic())
     this.html = this._dom.getHtmlString()
   }
@@ -30,7 +31,9 @@ class JSXParser {
       parentNodeData,
       this._dom.getCurrentAddress()
     )
-    this._dom.attach(element)
+    if (element) {
+      this._dom.attach(element)
+    }
     this._nodes.push(nodeData)
     const childAstNodes = this._squashChildren(astNode)
     childAstNodes.forEach((node, i) => this._walkJSXTree(node, i, nodeData))
@@ -73,7 +76,6 @@ class JSXParser {
           children.push(child)
           break
         default:
-          // console.log(astNode)
           throw new Error('Unexpected node type: ' + child.type)
       }
     })

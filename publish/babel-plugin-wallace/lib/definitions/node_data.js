@@ -19,6 +19,7 @@ class NodeData {
     this.nodeTreeAddress = nodeTreeAddress
     this.processAsStub = false
     this.stubName = undefined
+    this.nestedClass = undefined
     this.saveAs = undefined
     this.customWrapperClass = undefined
     this.customWrapperArgs = undefined

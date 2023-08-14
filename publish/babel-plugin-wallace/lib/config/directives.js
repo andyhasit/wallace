@@ -74,12 +74,12 @@ const old = {
   //     this.chainedCalls.push(`pool(${poolInstance})`)
   //   }
   // },
-  "props": {
-    params: 'args',
-    handle: function(args) {
-      this.props = this.expandProps(args)
-    }
-  },
+  // "props": {
+  //   params: 'args',
+  //   handle: function(args) {
+  //     this.props = this.expandProps(args)
+  //   }
+  // },
   "replace": {
     params: 'componentCls, props?',
     handle: function(componentCls, props) {
@@ -113,6 +113,7 @@ const old = {
       this.addWatch(watch, undefined, 'swap', componentRefVariable)
     }
   },
+  // Only for repeat items
   "use": {
     params: 'componentDef, key?',
     handle: function(componentDef, key) {
@@ -158,7 +159,7 @@ const schema = {
 
 
 const directives = {
-  el: {
+  _el: {
     help: `
       Gives the wrapper for this element a name so it can be accessed later:
 
@@ -171,7 +172,21 @@ const directives = {
       nodeData.saveAs = attInfo.value
     }
   },
-  hide: {
+  _for: {
+    help: `
+      Creates a repeat element:
+    `,
+    allowedTypes: ["expr"],
+    handle: function(nodeData, attInfo) {
+      const parent = nodeData.parentNodeData
+      const componentDef = nodeData.nestedClass
+      const watch = attInfo.args[0]
+      const key = undefined
+      parent.chainedCalls.push(`pool(${parent.buildPoolInit(componentDef, key)})`)
+      parent.addWatch(watch, undefined, 'items', componentRefVariable)
+    }
+  },
+  _hide: {
     help: `
       Conditionally hides an element:
 
@@ -184,7 +199,7 @@ const directives = {
       nodeData.shieldQuery = attInfo.args[0]
     }
   },
-  on: {
+  _on: {
     help: `
       Creates an event handler:
 
@@ -199,7 +214,7 @@ const directives = {
   },
 
   // TODO: change this because we may use a special wrapper?
-  pool: {
+  _pool: {
     help: `
       Specify a pool object for repeat items:
 
@@ -211,7 +226,19 @@ const directives = {
       nodeData.chainedCalls.push(`pool(${attInfo.args[0]})`)
     }
   },
-  show: {
+  _props: {
+    help: `
+      Specify props for a nested component:
+
+      /h <NestedComponent _props={{foo: 'bar'}} />
+      
+    `,
+    allowedTypes: ["expr"],
+    handle: function(nodeData, attInfo) {
+      nodeData.props = nodeData.expandProps(attInfo.args[0])
+    }
+  },
+  _show: {
     help: `
       Conditionally shows an element:
 
