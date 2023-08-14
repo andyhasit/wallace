@@ -12,9 +12,10 @@ const {Watcher} = require('./watcher')
  */
 // ALternative names: DynamicNode, WrappedNode, SpecialNode
 class NodeData {
-  constructor(componentName, path, nodeTreeAddress) {
+  constructor(componentName, path, parentNodeData, nodeTreeAddress) {
     this.componentName = componentName
     this.path = path
+    this.parentNodeData = parentNodeData
     this.nodeTreeAddress = nodeTreeAddress
     this.processAsStub = false
     this.stubName = undefined

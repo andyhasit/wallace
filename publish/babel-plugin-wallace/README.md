@@ -465,19 +465,25 @@ It would maybe be simpler if the ` JSXParser` returned `ComponentDefinition` whi
 
 And rename to `ComponentCodeGenerator`.
 
-Maybe contexts should call `convertJSX` which takes JSX and returns code to insert. Maybe the parser should return a data structure
-
-
+Maybe contexts should call `convertJSX` which takes JSX and returns code to insert. Maybe the parser should return a data structure.
 
 https://github.com/jamiebuilds/babel-handbook/blob/master/translations/en/plugin-handbook.md#-enabling-syntax-in-plugins
 
 
 
-## Rethink
+### Watch Always and Once
 
+In walrii, always was represented as `*` and doesn't create a lookup as the component checks if the key is `*`  (in `applyWatchCallbacks`) before trying to evaluate. In Wallace this needs to change slightly as `*` is not valid in JSX. We can still save the key as `*` but we need to show it differently in JSX.
 
+We can hack "once" as follows (or undefined):
 
-Using JSX is problematic as babel reads expressions as code and messes with the variables. Doing it as a html string is clunky as:
+```jsx
+<div _style:color={null|c.getColor()} >hello</div>
+```
 
-1. It doesn't recognise JS inside, so no intellisense
-2. 
+And always as:
+
+```jsx
+<div _style:color={NaN|c.getColor()} >hello</div>
+```
+

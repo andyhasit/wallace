@@ -73,7 +73,8 @@ proto.bubble = function(name) {
   let target = this.parent
   while (!und(target)) {
     if (target[name]) {     
-      // We don't really care about performance here, so accessing arguments is fine.   
+      // We don't really care about performance here, so accessing arguments is fine.
+      // TODO: maybe we do care, so pass as array? Or use proxy?
       return target[name].apply(target,  Array.prototype.slice.call(arguments, 1))
     }
     target = target.parent
@@ -223,9 +224,11 @@ const applyWatchCallbacks = (component, wrapper, callbacks) => {
   
   for (let key in callbacks) {
     let callback = callbacks[key]
+    // TODO: change this to use constant.
     if (key === '*') {
       callback.call(component, wrapper, component.props, component)
     } else {
+      // TODO: will this transpile to something different?
       // means: {new, old, changed}
       const {n, o, c} = component.lookup(key)
       if (c) {

@@ -12,27 +12,28 @@ class JSXParser {
     this._path = path
     this._componentName = componentName
     this._dom = new ComponentDOM()
+    this._nodes = []
     this.dynamicNodes = []
     this.html = undefined
   }
   parse() {
     this._walkJSXTree(this._path.node, undefined)
+    this.dynamicNodes = this._nodes.filter(node => node.isDynamic())
     this.html = this._dom.getHtmlString()
   }
-  _walkJSXTree(astNode, i) {
+  _walkJSXTree(astNode, i, parentNodeData) {
     this._dom.push(i)
     const {element, nodeData} = extractNodeData(
       this._componentName, 
       this._path,
       astNode,
+      parentNodeData,
       this._dom.getCurrentAddress()
     )
     this._dom.attach(element)
-    if (nodeData.isDynamic()) {
-      this.dynamicNodes.push(nodeData)
-    }
+    this._nodes.push(nodeData)
     const childAstNodes = this._squashChildren(astNode)
-    childAstNodes.forEach((node, i) => this._walkJSXTree(node, i))
+    childAstNodes.forEach((node, i) => this._walkJSXTree(node, i, nodeData))
     this._dom.pop()
   }
   _squashChildren(astNode) {

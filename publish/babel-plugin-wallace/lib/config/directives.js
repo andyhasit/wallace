@@ -7,7 +7,8 @@ const {RequestsHelp, watchAlways, watchNever} = require('../definitions/constant
 const componentRefVariable = 'c'; // The variable name by which the component will be known.
 
 
-const directives = {
+const old = {
+  // What is this for?
   "bind": {
     params: 'watch, event?',
     handle: function(watch, event='change') {
@@ -33,17 +34,17 @@ const directives = {
       this.addWatch(watchNever, value, 'css')
     }
   },
-  "el": {
-    handle: function(arg) {
-      this.saveAs = arg
-    }
-  },
-  "hide": {
-    params: 'watch',
-    handle: function(watch) {
-      this.shieldQuery = watch
-    }
-  },
+  // "el": {
+  //   handle: function(arg) {
+  //     this.saveAs = arg
+  //   }
+  // },
+  // "hide": {
+  //   params: 'watch',
+  //   handle: function(watch) {
+  //     this.shieldQuery = watch
+  //   }
+  // },
   "helper": {
     handle: function(watch, converter) {
       throw new RequestsHelp(helpTopic)
@@ -61,18 +62,18 @@ const directives = {
       this.addWatch(watch, converter, 'items', componentRefVariable)
     }
   },
-  "on": {
-    params: 'event, callbackStr',
-    handle: function(event, callbackStr) {
-      this.addEventListener(event, callbackStr)
-    }
-  },
-  "pool": {
-    params: 'poolInstance',
-    handle: function(poolInstance) {
-      this.chainedCalls.push(`pool(${poolInstance})`)
-    }
-  },
+  // "on": {
+  //   params: 'event, callbackStr',
+  //   handle: function(event, callbackStr) {
+  //     this.addEventListener(event, callbackStr)
+  //   }
+  // },
+  // "pool": {
+  //   params: 'poolInstance',
+  //   handle: function(poolInstance) {
+  //     this.chainedCalls.push(`pool(${poolInstance})`)
+  //   }
+  // },
   "props": {
     params: 'args',
     handle: function(args) {
@@ -88,13 +89,13 @@ const directives = {
       }
     }
   },
-  "show": {
-    params: 'watch',
-    handle: function(watch) {
-      this.shieldQuery = watch
-      this.reverseShield = 1
-    }
-  },
+  // "show": {
+  //   params: 'watch',
+  //   handle: function(watch) {
+  //     this.shieldQuery = watch
+  //     this.reverseShield = 1
+  //   }
+  // },
   "stub": {
     params: 'stubName',
     handle: function(stubName) {
@@ -137,6 +138,93 @@ const directives = {
       this.customWrapperArgs = args
     }
   }
+}
+
+
+const callData = {
+  value: "str", // if type str
+  args: "str", // if type expr
+  qualifier: "str|undefined", // foo:qualifier
+}
+
+
+const schema = {
+  help: "...",
+  allowedTypes: "str|expr|null",
+  handle: "function(nodeData, callData)",
+  args: "array", // only if type "expr"
+  argSets: "array", // in case it allows multiple args
+}
+
+
+const directives = {
+  el: {
+    help: `
+      Gives the wrapper for this element a name so it can be accessed later:
+
+      /h <div _el="user"></div>
+      
+      /j c.el.user.text("Wallace")
+    `,
+    allowedTypes: ["str"],
+    handle: function(nodeData, attInfo) {
+      nodeData.saveAs = attInfo.value
+    }
+  },
+  hide: {
+    help: `
+      Conditionally hides an element:
+
+      /h <div _hide={x > 10}></div>
+      
+      Available args are: c, p
+    `,
+    allowedTypes: ["expr"],
+    handle: function(nodeData, attInfo) {
+      nodeData.shieldQuery = attInfo.args[0]
+    }
+  },
+  on: {
+    help: `
+      Creates an event handler:
+
+      /h <div _on:click={alert('hello')}></div>
+      
+      Available args are: w, e
+    `,
+    allowedTypes: ["expr"],
+    handle: function(nodeData, attInfo) {
+      nodeData.addEventListener(attInfo.qualifier, attInfo.args[0])
+    }
+  },
+
+  // TODO: change this because we may use a special wrapper?
+  pool: {
+    help: `
+      Specify a pool object for repeat items:
+
+      /h <div _pool={poolObject}></div>
+      
+    `,
+    allowedTypes: ["expr"],
+    handle: function(nodeData, attInfo) {
+      nodeData.chainedCalls.push(`pool(${attInfo.args[0]})`)
+    }
+  },
+  show: {
+    help: `
+      Conditionally shows an element:
+
+      /h <div _show={x > 10}></div>
+      
+      Available args are: c, p
+    `,
+    allowedTypes: ["expr"],
+    handle: function(nodeData, attInfo) {
+      nodeData.shieldQuery = attInfo.args[0]
+      nodeData.reverseShield = 1
+    }
+  },
 }
 
 // Do not import directly, only through index so we get custom directives too.

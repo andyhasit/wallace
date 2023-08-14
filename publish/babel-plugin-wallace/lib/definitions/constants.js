@@ -29,7 +29,7 @@ const lookupCallbackArgs = 'c, p'
 const propsCallbackArgs = 'c, p'
 const eventCallbackArgs = 'w, e'
 
-const watchAlways = '1';
+const watchAlways = '1'; // TODO: wallace itself still needs to see this as '*'
 const watchNever = '0';
 
 /**

@@ -7,6 +7,7 @@ const ComponentWithOwnProps = Component.define({
   <div>{p.name}</div>
 )
 
+
 test("Mounted component can create own props", () => {
   const div = load(ComponentWithOwnProps)
   expect(div).toShow(`
@@ -15,6 +16,7 @@ test("Mounted component can create own props", () => {
     </div>
   `)
 })
+
 
 const Component1 =
   <div>
