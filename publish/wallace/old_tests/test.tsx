@@ -1,7 +1,8 @@
 
-const a = <div>
-  <button onClick="">Click me</button>
-</div>
+const a = 
+  <div>
+    <button on:class="ff">Click me</button>
+  </div>
 
 
 // const ClickCounter = Component.__ex__(html`

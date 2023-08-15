@@ -1,7 +1,7 @@
 import {mount, define} from 'wallace'
 
 
-// const TestComponent = define(
+// const Foo = define(
 //   <div id="test">
 //     <Foo/>
 //   </div>
@@ -18,7 +18,7 @@ import {mount, define} from 'wallace'
 //   //   <Foo/>
 //   // </div>,
 //   {
-//     base: TestComponent,
+//     base: Foo,
 //     proto: methods
 //   }
 // )

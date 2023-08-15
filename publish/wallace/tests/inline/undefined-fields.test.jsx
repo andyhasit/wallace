@@ -1,12 +1,12 @@
-import {load, Component} from '../utils'
+import {load} from '../utils'
 
 const person = {name: undefined}
 
-const ComponentWithOwnProps = Component.__ex__(html`
+const ComponentWithOwnProps =
   <div>
-    <div>{person.name}<br>yolo</div>
+    <div>{person.name}<br/>yolo</div>
   </div>
-`)
+
 
 test("Undefined values start empty then populate with data", () => {
   const div = load(ComponentWithOwnProps)

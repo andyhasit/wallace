@@ -1,24 +1,23 @@
-import {c, load, Component} from '../utils'
+import {load} from '../utils'
 
 
-class TestComponent extends Component {
-  __html__ = `
-    <div>
-      <span class="{..style}"></span>
-      <span class="{.style}"></span>
-      <span class="{service.style}"></span>
-    </div>
-  `
-  init() {
-    this.style = 'warning'
-  }
+const Foo =
+  <div>
+    <span class={p.style}></span>
+    <span class={c.style}></span>
+    <span class={service.style}></span>
+  </div>
+
+Foo.prototype.init = function() {
+  this.style = 'warning'
 }
+
 
 const props = {style: 'alert'}
 const service = {style: 'danger'}
 
 test('Attributes display correct initial values', () => {
-  const div = load(TestComponent, props)
+  const div = load(Foo, props)
   expect(div).toShow(`
     <div>
       <span class="alert"></span>
@@ -29,7 +28,7 @@ test('Attributes display correct initial values', () => {
 })
 
 test('Attributes update when service changed', () => {
-  const div = load(TestComponent, props)
+  const div = load(Foo, props)
   service.style = 'ok'
   div.update()
   expect(div).toShow(`
@@ -42,7 +41,7 @@ test('Attributes update when service changed', () => {
 })
 
 test('Attributes update when props changed', () => {
-  const div = load(TestComponent, props)
+  const div = load(Foo, props)
   props.style = 'boo'
   div.update()
   expect(div).toShow(`
@@ -55,7 +54,7 @@ test('Attributes update when props changed', () => {
 })
 
 test('Attributes update when new props passed', () => {
-  const div = load(TestComponent, props)
+  const div = load(Foo, props)
   div.setProps({style: 'different'})
   expect(div).toShow(`
     <div>

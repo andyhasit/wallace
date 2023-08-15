@@ -6,7 +6,7 @@ const data = {
 
 let args = undefined
 
-const TestComponent =
+const Foo =
   <div>
     <button _el={btn} _onclick={clicked(w, e, p, c)}>Go</button>
   </div>
@@ -18,7 +18,7 @@ const clicked = (w, e, p, c) => {
 }
 
 test('On click event works', () => {
-  const div = load(TestComponent, data)
+  const div = load(Foo, data)
   const btn = div.el.childNodes[0]
   btn.click()
   expect(data.clicks).toEqual(1)

@@ -1,7 +1,7 @@
 import {h, load} from '../utils'
 
 
-const TestComponent =
+const Foo =
   <div _swap={p.choice|mappings|myFallback}></div>
 
 const ComponentA =
@@ -21,7 +21,7 @@ const myFallback = k => h('span').text(k)
 const props = {choice: 'a'}
 
 test('Swap syntax works', () => {
-  const div = load(TestComponent, props)
+  const div = load(Foo, props)
   expect(div).toShow(`
     <div>
       <span>A</span>

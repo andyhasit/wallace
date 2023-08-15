@@ -1,24 +1,24 @@
-import {c, load, Component} from '../utils'
+import {load} from '../utils'
 
 
-class TestComponent extends Component {
-  __html__ = `
+const Foo =
     <div>
-      <span>{..name}</span>
-      <span>{.name}</span>
+      <span>{p.name}</span>
+      <span>{c.name}</span>
       <span>{service.name}</span>
     </div>
-  `
-  init() {
-    this.name = 'joe'
-  }
+
+
+Foo.prototype.init = function() {
+  this.name = 'joe'
 }
+
 
 const props = {name: 'bob'}
 const service = {name: 'jane'}
 
 test('Inner display correct initial values', () => {
-  const div = load(TestComponent, props)
+  const div = load(Foo, props)
   expect(div).toShow(`
     <div>
       <span>bob</span>
@@ -29,7 +29,7 @@ test('Inner display correct initial values', () => {
 })
 
 test('Inner update when service changed', () => {
-  const div = load(TestComponent, props)
+  const div = load(Foo, props)
   service.name = 'dave'
   div.update()
   expect(div).toShow(`
@@ -42,7 +42,7 @@ test('Inner update when service changed', () => {
 })
 
 test('Inner update when props changed', () => {
-  const div = load(TestComponent, props)
+  const div = load(Foo, props)
   props.name = 'boris'
   div.update()
   expect(div).toShow(`
@@ -55,7 +55,7 @@ test('Inner update when props changed', () => {
 })
 
 test('Inner update when new props passed', () => {
-  const div = load(TestComponent, props)
+  const div = load(Foo, props)
   div.setProps({name: 'alice'})
   expect(div).toShow(`
     <div>

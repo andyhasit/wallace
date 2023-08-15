@@ -12,13 +12,13 @@ const BaseComponent =
   </div>
 
 
-const TestComponent = Component.define({
+const Foo = Component.define({
   _base: BaseComponent
 })
 
 
 test('Renders correctly', () => {
-  const div = load(TestComponent, props)
+  const div = load(Foo, props)
   expect(div).toShow(`
     <div id="test">
       <span>hello <text>bob</text></span>

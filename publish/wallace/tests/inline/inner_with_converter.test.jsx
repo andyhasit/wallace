@@ -11,22 +11,20 @@ function foo(n) {
   return `${n} from global`
 }
 
-class TestComponent extends Component {
-  __html__ = `
+const Foo =
     <div>
-      <span>{..name|..foo(n)}</span>
-      <span>{..name|.foo(n)}</span>
-      <span>{..name|foo(n)}</span>
+      <span>{p.name|p.foo(n)}</span>
+      <span>{p.name|c.foo(n)}</span>
+      <span>{p.name|foo(n)}</span>
     </div>
-  `
-  foo(n) {
-    return `${n} from this`
-  }
+
+Foo.prototype.foo = function(n) {
+  return `${n} from this`
 }
 
 
 test('Convert functions called on load', () => {
-  const div = load(TestComponent, props)
+  const div = load(Foo, props)
   expect(div).toShow(`
     <div>
       <span>bob from props</span>
@@ -37,7 +35,7 @@ test('Convert functions called on load', () => {
 })
 
 test('Convert functions called on update', () => {
-  const div = load(TestComponent, props)
+  const div = load(Foo, props)
   props.name = 'jane'
   div.update()
   expect(div).toShow(`

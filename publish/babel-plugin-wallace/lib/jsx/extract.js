@@ -59,44 +59,11 @@ class JSXElementConverter extends BaseConverter {
     this.nodeData.attributes = openingElement.attributes.map(attr => new AttributeInfo(this.path, attr))
     this.nodeData.attributeNames = this.nodeData.attributes.map(attr => attr.name)
     
-    /*
-     TODO: resolve chicken and egg situation of determining whether it's a repeat or not.
-     I could either inject attributes, maybe "__nest__" and let the directives resolve everything.
-
-    */
-    const isRepeat = true // fudge
+    this.element = doc.createElement(tagName)
 
     if (isCapitalized(tagName) || tagName.includes(".")) {
       this.nodeData.nestedClass = tagName
-      if (isRepeat) {
-
-      } else {
-        // It is nested, so we only allow props and show/hide?
-        // Or no normal attributes, only directives, and only those allowed?
-        // if (!onlyHas(this.nodeData.attributeNames, "props")) {
-        //   throw this.path.buildCodeFrameError(`Nested components are only allowed "_props" attribute.`)
-        // }
-        // TODO: check there are is no nested DOM.
-        // tagName = "br"
-        this.nodeData.replaceWith = tagName
-        this.element = doc.createElement("br")
-      }
-    } else {
-      this.element = doc.createElement(tagName)
     }
-
-
-    /*
-    Parse attributes into an array, save on NodeData, then loop through,
-    because each directive may want to inspect.
-    We also want to block Component tags from having certain attributes.
-
-    So maybe:
-      1. Extract attributes
-      2. Examine tag name and do special things in those cases.
-      3. Go over directives
-
-    */
 
     this.nodeData.attributes.forEach(attr => {
       if (attr.isDirective) {
@@ -106,11 +73,18 @@ class JSXElementConverter extends BaseConverter {
       }
     })
 
-    
+    // TODO: check siblings and children
+    if (this.nodeData.nestedClass) {
+      if (this.nodeData.isRepeat) {
+        this.element = null
+      } else {
+        this.element = doc.createElement("br")
+        this.nodeData.replaceWith = tagName
+      }
+    }
   }
   getTagName() {
-    // if (this.astNode.openingElement.type === 'JSXMemberExpression'){}
-    // if (this.astNode.openingElement.type === 'JSXMemberExpression'){}
+    // could be 'JSXMemberExpression' or 'JSXIdentifier', so just read as string.
     return this.readCode(this.astNode.openingElement.name)
   }
   processNormalAttribute(name, value) {
@@ -177,17 +151,17 @@ class AttributeInfo {
   }
   processName() {
     const name = this.astAttribute.name
-    if (name.type === 'JSXIdentifier') {
+    if (name.type === "JSXIdentifier") {
       this.name = name.name
-    } else if (name.type === 'JSXNamespacedName') {
+    } else if (name.type === "JSXNamespacedName") {
       this.name = name.namespace.name
       this.qualifier = name.name.name
     } else {
       throw this.path.buildCodeFrameError(`Unknown attribute name type: ${name.type}`)
     }
-    if (this.name.startsWith('__')) {
+    if (this.name.startsWith("__")) {
       this.name = this.name.slice(1)
-    } else if (this.name.startsWith('_')) {
+    } else if (this.name.startsWith("_")) {
       this.isDirective = true
     }
   }
@@ -197,11 +171,11 @@ class AttributeInfo {
       this.arg = null
       this.argType = "null"
     }
-    else if (value.type === 'StringLiteral') {
+    else if (value.type === "StringLiteral") {
       this.value = value.value
       this.argType = "str"
     }
-    else if (value.type === 'JSXExpressionContainer') {
+    else if (value.type === "JSXExpressionContainer") {
       this.argType = "expr"
       // Detecting BinaryExpression through AST is a PITA. Strings are much simpler.
       const code = readCode(this.path, value.expression).replaceAll("||", splitter)

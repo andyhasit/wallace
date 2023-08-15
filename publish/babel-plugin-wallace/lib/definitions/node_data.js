@@ -20,6 +20,7 @@ class NodeData {
     this.processAsStub = false
     this.stubName = undefined
     this.nestedClass = undefined
+    this.isRepeat = false
     this.saveAs = undefined
     this.customWrapperClass = undefined
     this.customWrapperArgs = undefined
@@ -63,11 +64,9 @@ class NodeData {
    * @param {string} slot 
    */
   addEventListener(event, slot) {
-    if (!slot.endsWith(')')) {
-      throw new FrameworkError("Event callback slot must be a function call.")
-    }
     const callback = this.buildEventListenerCallback(slot)
-    this.chainedCalls.push(`on('${event}', ${callback})`)
+    // TODO: don't create a wapper unless it is needed.
+    this.chainedCalls.push(`on('${event.toLowerCase()}', ${callback})`)
   }
   /**
    * Builds the callback function for an event handler.
@@ -77,15 +76,11 @@ class NodeData {
    * @param {string} slot 
    */
   buildEventListenerCallback(slot) {
-    const isRawSlot = slot.startsWith('(')
-    let body = this.expandValueSlot(slot, true)
-    if (!isRawSlot) {
-      body = replaceArgs(body, 'c', componentRefInBuild)
-      body = replaceArgs(body, 'p', componentRefInBuild + '.props')
-    }
+    // TODO: change this to detect which vars are used, and use constants.
+    const vars = "var c = component, p = component.props"
+    const body = [vars, slot].join(";")
     return `function(${eventCallbackArgs}) {${body}}`
   }
-
   /**
    * Adds an additional lookup, which is needed for certain situations like
    * multiple inline directives in the same string.

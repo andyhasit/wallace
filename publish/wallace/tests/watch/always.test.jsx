@@ -6,14 +6,11 @@ function getNext() {
   return next
 }
 
-class TestComponent extends Component {
-  __html__ = '<span :watch="*|getNext()|text"></span>'
-}
-
+const Foo = <span>{A|getNext()}</span>
 const props = {name: 'joe'}
 
 test('Empty property notation always updates', () => {
-  const div = load(TestComponent, props)
+  const div = load(Foo, props)
   expect(div).toShow('<span>1</span>')
   div.update()
   expect(div).toShow('<span>2</span>')

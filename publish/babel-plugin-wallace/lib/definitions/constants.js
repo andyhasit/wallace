@@ -29,8 +29,10 @@ const lookupCallbackArgs = 'c, p'
 const propsCallbackArgs = 'c, p'
 const eventCallbackArgs = 'w, e'
 
-const watchAlways = '1'; // TODO: wallace itself still needs to see this as '*'
-const watchNever = '0';
+// The component itself still needs to see this as '*'
+const lookupAlwaysUpdate = "*"; 
+const alwaysUpdate = 'A'; 
+const neverUpdate = 'N';
 
 /**
  * The name of the arg representing the component in the buildComponent method.
@@ -52,8 +54,9 @@ module.exports = {
   allVariableLetters,
   EOL,
   callableWatchArgs,
-  watchAlways,
-  watchNever,
+  alwaysUpdate,
+  neverUpdate,
+  lookupAlwaysUpdate,
   FrameworkError,
   eventCallbackArgs,
   wallaceDefs, 

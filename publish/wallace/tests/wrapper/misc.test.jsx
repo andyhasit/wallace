@@ -1,6 +1,6 @@
 import {load} from '../utils'
 
-const TestComponent = Component.define({
+const Foo = Component.define({
   afterInit() {
     this.el.label.text('Name:').css('bold')
     this.el.nameInput.value('Bob')
@@ -16,7 +16,7 @@ const TestComponent = Component.define({
 
 
 test('Misc wrapper properties', () => {
-  const div = load(TestComponent)
+  const div = load(Foo)
   expect(div).toShow(`
   <div>
     <span class="bold">Name:</span>

@@ -19,26 +19,25 @@ const service = {
 }
 
 
-class TestComponent extends Component {
-  __html__ = `
-    <div>
-      <span>{..getName()}</span>
-      <span>{.getName()}</span>
-      <span>{getName()}</span>
-      <span>{service.getName()}</span>
-    </div>
-  `
+const Foo = Component.define({
   init() {
     this.name = 'lisa'
-  }
+  },
   getName() {
     return this.name
   }
-}
+},
+    <div>
+      <span>{p.getName()}</span>
+      <span>{c.getName()}</span>
+      <span>{getName()}</span>
+      <span>{service.getName()}</span>
+    </div>
+)
 
 
 test('Inline functions called on load', () => {
-  const div = load(TestComponent, props)
+  const div = load(Foo, props)
   expect(div).toShow(`
     <div>
       <span>bob</span>
@@ -49,8 +48,9 @@ test('Inline functions called on load', () => {
   `)
 })
 
+
 test('Inline functions called on update', () => {
-  const div = load(TestComponent, props)
+  const div = load(Foo, props)
   div.component.name = 'alice'
   service.name = 'jana'
   div.update()

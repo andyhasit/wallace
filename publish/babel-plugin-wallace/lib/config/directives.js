@@ -3,7 +3,7 @@
  * 
  * A directive definition's handler's "this" is a NodeData instance.
  */
-const {RequestsHelp, watchAlways, watchNever} = require('../definitions/constants')
+const {RequestsHelp, alwaysUpdate, neverUpdate} = require('../definitions/constants')
 const componentRefVariable = 'c'; // The variable name by which the component will be known.
 
 
@@ -31,7 +31,7 @@ const old = {
   "css-f": {
     params: 'value',
     handle: function(value) {
-      this.addWatch(watchNever, value, 'css')
+      this.addWatch(neverUpdate, value, 'css')
     }
   },
   // "el": {
@@ -159,6 +159,18 @@ const schema = {
 
 
 const directives = {
+  _att: {
+    help: `
+      Sets an HTML attribute on the element:
+
+      /h <div _att:hidden="x > 3"></div>
+    `,
+    allowedTypes: ["expr"],
+    handle: function(nodeData, attInfo) {
+      nodeData.addWatch(attInfo.args[0], undefined, `@${attInfo.qualifier}`)
+    }
+
+  },
   _el: {
     help: `
       Gives the wrapper for this element a name so it can be accessed later:
@@ -167,9 +179,32 @@ const directives = {
       
       /j c.el.user.text("Wallace")
     `,
-    allowedTypes: ["str"],
+    allowedTypes: ["null"],
+    allowedQualifier: true,
     handle: function(nodeData, attInfo) {
-      nodeData.saveAs = attInfo.value
+      nodeData.saveAs = attInfo.qualifier
+    }
+  },
+  _checked: {
+    help: `
+      Sets the "checked" status of the element:
+
+      /h <input _checked={c.active} type="checkbox"/>
+    `,
+    allowedTypes: ["expr"],
+    handle: function(nodeData, attInfo) {
+      nodeData.addWatch(attInfo.args[0], undefined, 'checked')
+    }
+  },
+  _disabled: {
+    help: `
+      Sets the "disabled" status of the element:
+
+      /h <button _disabled={!c.active}>...</button>
+    `,
+    allowedTypes: ["expr"],
+    handle: function(nodeData, attInfo) {
+      nodeData.addWatch(attInfo.args[0], undefined, 'checked')
     }
   },
   _for: {
@@ -184,11 +219,12 @@ const directives = {
       const key = undefined
       parent.chainedCalls.push(`pool(${parent.buildPoolInit(componentDef, key)})`)
       parent.addWatch(watch, undefined, 'items', componentRefVariable)
+      nodeData.isRepeat = true
     }
   },
   _hide: {
     help: `
-      Conditionally hides an element:
+      Hides an element:
 
       /h <div _hide={x > 10}></div>
       
@@ -240,7 +276,7 @@ const directives = {
   },
   _show: {
     help: `
-      Conditionally shows an element:
+      Shows an element:
 
       /h <div _show={x > 10}></div>
       

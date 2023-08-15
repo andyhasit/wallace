@@ -6,8 +6,9 @@ const {
   propsCallbackArgs,
   watchCallbackArgsWithValue,
   watchCallbackArgsWithoutValue,
-  watchAlways,
-  watchNever
+  alwaysUpdate,
+  lookupAlwaysUpdate,
+  neverUpdate
 } = require('../definitions/constants')
 
 const {
@@ -186,8 +187,9 @@ class CodeGenerator {
     const callbackLinesroupedByWatchedField = groupArray(watches, 'watch', details => details)
     for (let [watch, lines] of Object.entries(callbackLinesroupedByWatchedField)) {
       this.addWatchQueryCallback(watch)
-      let callbackArgs = watch === watchAlways ? watchCallbackArgsWithoutValue : watchCallbackArgsWithValue
+      let callbackArgs = watch === alwaysUpdate ? watchCallbackArgsWithoutValue : watchCallbackArgsWithValue
       let callback = this.buildWatcherCallbackFunction(callbackArgs, lines)
+      watch = watch === alwaysUpdate ? lookupAlwaysUpdate : watch
       callbacksObject.add(watch, callback)
     }
     return callbacksObject
@@ -298,7 +300,7 @@ class CodeGenerator {
     this.savedElements.add(saveAs, `${initCall}${chainedCallStatement}`)
   }
   addWatchQueryCallback(watch) {
-    if (watch !== watchAlways) {
+    if (watch !== alwaysUpdate) {
       this.addLookupEntry(watch, watch)
     }
   }
@@ -313,7 +315,7 @@ class CodeGenerator {
 
     Same will happen with callbacks?
     */
-    const callback = (watch === watchNever || watch === undefined) ?
+    const callback = (watch === neverUpdate || watch === undefined) ?
       `function() {return null}` :
       `function(${lookupCallbackArgs}) {return ${statement}}`
     this.protoLookupCallbacks.add(watch, callback)
