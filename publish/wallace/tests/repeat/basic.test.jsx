@@ -8,7 +8,7 @@ const Parent =
   <div>
     <h1>Hello</h1>
     <div>
-      <Child _iter={items}/>
+      <Child _for={items}/>
     </div>
   </div>
 
