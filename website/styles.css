@@ -1,0 +1,51 @@
+@font-face {
+  font-family: BlackOpsOne;
+  src: url(BlackOpsOne-Regular.ttf);
+}
+
+body {
+  background-color: #fff243;
+  margin: 0;
+}
+
+.logo {
+  margin: 10px;
+  height: 40px;
+  width: 40px;
+  border-radius: 10px;
+}
+
+.navbar {
+  height: 60px;
+  color: #fff243;
+  font-family: BlackOpsOne;
+  background-color: #000;
+}
+
+.header {
+  text-align: center;
+}
+
+.caption {
+  padding: 0;
+  font-size: 1.2em;
+  font-style: italic;
+}
+
+h1 {
+  font-family: BlackOpsOne;
+  font-size: 50px;
+  align-self: center;
+  margin: 10px auto;
+}
+
+.claim {
+  
+  font-size: 1.6em;
+  margin-top: 30px;
+}
+
+.content {
+  padding: 20px;
+  /* width: 100%; */
+}
