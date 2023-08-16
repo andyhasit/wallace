@@ -175,7 +175,7 @@ const directives = {
     help: `
       Gives the wrapper for this element a name so it can be accessed later:
 
-      /h <div _el="user"></div>
+      /h <div _el:user></div>
       
       /j c.el.user.text("Wallace")
     `,

@@ -33,8 +33,11 @@ class JSXTextConverter extends BaseConverter {
   convert() {
     // expressions in text become JSXExpressionContainers, so there is never dynamic 
     // data inside JSText.
-    this.element = doc.createTextNode(this.astNode.value)
-    addInlineWatches(this.nodeData, this.astNode.value, 'text', true)
+    // Except that's currently not true due to how we squash. TODO: fix this.
+    const text = this.astNode.value
+    this.element = doc.createTextNode(text)
+    // console.log(text)
+    addInlineWatches(this.nodeData, text, 'text', true)
   }
 }
 
