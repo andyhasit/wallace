@@ -8,7 +8,7 @@ let args = undefined
 
 const Foo =
   <div>
-    <button _el={btn} _onclick={clicked(w, e, p, c)}>Go</button>
+    <button _el:btn _on:click={clicked(w, e, p, c)}>Go</button>
   </div>
 
 

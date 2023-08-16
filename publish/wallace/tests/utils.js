@@ -11,6 +11,16 @@ import {
   Wrapper
 } from '../src/index'
 
+
+
+// const dom = new JSDOM();
+
+// dom.window.top === dom.window;
+// dom.window.location.href === "about:blank";
+
+// dom.reconfigure({ windowTop: myFakeTopForTesting, url: "https://example.com/" });
+
+
 /**
  * Returns a new div appended to the document body.
  */

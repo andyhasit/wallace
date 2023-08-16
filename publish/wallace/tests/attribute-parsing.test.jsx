@@ -31,7 +31,8 @@ test('Dunder attribute converted to single underscore', () => {
 
 
 test('Single underscore treated as directive', () => {
-  const MyComponent = <div _show="true">hello</div>
+  let x = true
+  const MyComponent = <div _show={x}>hello</div>
   const div = load(MyComponent)
   expect(div).toShow(`<div>hello</div>`)
 })

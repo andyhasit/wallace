@@ -8,9 +8,9 @@ const Foo = Component.define({
     }
   },
   <div>
-    <span _el="label"></span>
-    <input _el="nameInput"/>
-    <span _el="test"></span>
+    <span _el:label></span>
+    <input _el:nameInput/>
+    <span _el:test></span>
   </div>   
 )
 
