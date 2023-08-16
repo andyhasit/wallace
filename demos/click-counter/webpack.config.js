@@ -1,6 +1,7 @@
 const path = require("path");
 
 const presets = [];
+const productionPreset = '@babel/preset-env';
 
 const baseConfig = {
   mode: "development",
@@ -28,9 +29,8 @@ const baseConfig = {
 };
 
 
-module.exports =  function(env, argv) {
-  // For some reason env is undefined, so use argv.mode
-  const mode = argv.mode || "development";
+module.exports =  function() {
+  const mode = process.env.NODE_ENV || "development";
   baseConfig.mode = mode;
   if (mode == "production") {
     presets.push(productionPreset);

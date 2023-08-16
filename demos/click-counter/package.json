@@ -11,8 +11,18 @@
     "webpack-dev-server": "^4.15.1"
   },
   "scripts": {
-    "start": "webpack serve"
+    "start": "webpack serve",
+    "build-rollup": "NODE_ENV=production rollup -c",
+    "build-webpack": "NODE_ENV=production webpack",
+    "zip": "gzip -k dist/index.js",
+    "size": "du -bh dist/index.js.gz"
   },
   "author": "Andrew Buchan",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "@rollup/plugin-babel": "^6.0.3",
+    "@rollup/plugin-commonjs": "^25.0.4",
+    "@rollup/plugin-node-resolve": "^15.1.0",
+    "@rollup/plugin-terser": "^0.4.3"
+  }
 }
