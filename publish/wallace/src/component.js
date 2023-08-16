@@ -71,15 +71,17 @@ proto.init = function() {
  */
 proto.bubble = function(name) {
   let target = this.parent
-  while (!und(target)) {
-    if (target[name]) {     
+  while (target) {
+    console.log(target.name)
+    let func = target[name]
+    if (func) {     
       // We don't really care about performance here, so accessing arguments is fine.
       // TODO: maybe we do care, so pass as array? Or use proxy?
-      return target[name].apply(target,  Array.prototype.slice.call(arguments, 1))
+      return func.apply(target, Array.prototype.slice.call(arguments, 1))
     }
     target = target.parent
   }
-  throw 'Bubble popped.'
+  throw new Error('Bubble popped.')
 }
 /**
  * Move the component to new parent. Necessary if sharing a pool.
@@ -153,7 +155,7 @@ proto.updateSelf = function() {
     shouldBeVisible = true
     if (shieldQuery) {
       // Get the newValue for shieldQuery using lookup
-      shieldQueryResult = this.lookup(shieldQuery).n
+      shieldQueryResult = !!this.lookup(shieldQuery).n
 
       // Determine if shouldBeVisible based on reverseShield
       // i.e. whether "shieldQuery===true" means show or hide.
@@ -163,7 +165,7 @@ proto.updateSelf = function() {
       shieldCount = shouldBeVisible ? 0 : watch.sc
 
       // Set the element visibility
-      wrapper.visible(shouldBeVisible)
+      wrapper.hidden(!shouldBeVisible)
       i += shieldCount
     }
     if (shouldBeVisible) {
@@ -361,6 +363,6 @@ proto.__sv = function() {
 /**
  * Toggles visibility, like wrapper.
  */
-proto.visible = function(visible) {
-  this.e.classList.toggle('hidden', !visible)
+proto.hide = function(hidden) {
+  this.e.hidden = hidden
 }
