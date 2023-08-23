@@ -19,7 +19,9 @@ Lookup.prototype = {
       // Verbose but efficient way as it avoids lookups?
       // Or is this harmful to performance because we're just reading values more than calling functions?
       let o = component.__ov[key]
+      // TODO: is this checking for watchOnce?
       o = und(o) ? '' : o 
+      // console.log(key)
       const n = this.callbacks[key](component, component.props)
       const c = n !== o
       component.__ov[key] = n

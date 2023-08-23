@@ -39,13 +39,7 @@ Wrapper.prototype = {
     return this
   },
   att: function(name, value) {
-    this.e.setAttribute(name, value)
-    return this
-  },
-  atts: function(atts) {
-    for (let name in atts) {
-      this.att(name, atts[name])
-    }
+    this.e[name] = value
     return this
   },
   pool: function(pool) {
@@ -129,7 +123,7 @@ Wrapper.prototype = {
   src: function(value) {
     return this.att('src', value)
   },
-  style: function(name, value) {
+  style: function(value, name) {
     this.e.style[name] = value
     return this
   },
@@ -141,8 +135,11 @@ Wrapper.prototype = {
     this.e.textContent = value
     return this
   },
-  visible: function(visible) {
-    this.e.classList.toggle('hidden', !visible)
+  hidden: function(value) {
+    // TODO: fix this - it works in browser, is it just tests?
+    this.e.classList.toggle('hidden', value)
+    // console.log('hidden', value)
+    // this.e.hidden = !value
     return this
   },
   value: function(value) {

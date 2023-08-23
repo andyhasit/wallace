@@ -25,6 +25,26 @@ export function Component(parent) {
 } 
 
 
+
+Component.extend = function(opts) {
+  var base = opts._base || Component
+  // TODO: do we care about allowing this?
+  // var NewComponent = opts.hasOwnProperty('constructor') ? opts.constructor : function(parent) {
+  
+  // TODO: This ends up being the name of the function, used in logging etc.
+  // Maybe change with Object.defineProperty() or use object hack {name: func....}
+  var CustomComponent = function(parent) {
+    base.call(this, parent)
+  }
+  delete opts._base
+  CustomComponent.prototype = Object.create(base && base.prototype, {
+    constructor: { value: CustomComponent, writable: true, configurable: true }
+  })
+  Object.assign(CustomComponent.prototype, opts)
+  return CustomComponent
+}
+
+
 var proto = Component.prototype
 
 proto.onUpdate = noop
@@ -55,14 +75,17 @@ proto.init = function() {
  */
 proto.bubble = function(name) {
   let target = this.parent
-  while (!und(target)) {
-    if (target[name]) {     
-      // We don't really care about performance here, so accessing arguments is fine.   
-      return target[name].apply(target,  Array.prototype.slice.call(arguments, 1))
+  while (target) {
+    // console.log(target.name)
+    let func = target[name]
+    if (func) {     
+      // We don't really care about performance here, so accessing arguments is fine.
+      // TODO: maybe we do care, so pass as array? Or use proxy?
+      return func.apply(target, Array.prototype.slice.call(arguments, 1))
     }
     target = target.parent
   }
-  throw 'Bubble popped.'
+  throw new Error('Bubble popped.')
 }
 /**
  * Move the component to new parent. Necessary if sharing a pool.
@@ -136,7 +159,7 @@ proto.updateSelf = function() {
     shouldBeVisible = true
     if (shieldQuery) {
       // Get the newValue for shieldQuery using lookup
-      shieldQueryResult = this.lookup(shieldQuery).n
+      shieldQueryResult = !!this.lookup(shieldQuery).n
 
       // Determine if shouldBeVisible based on reverseShield
       // i.e. whether "shieldQuery===true" means show or hide.
@@ -146,7 +169,7 @@ proto.updateSelf = function() {
       shieldCount = shouldBeVisible ? 0 : watch.sc
 
       // Set the element visibility
-      wrapper.visible(shouldBeVisible)
+      wrapper.hidden(!shouldBeVisible)
       i += shieldCount
     }
     if (shouldBeVisible) {
@@ -207,9 +230,11 @@ const applyWatchCallbacks = (component, wrapper, callbacks) => {
   
   for (let key in callbacks) {
     let callback = callbacks[key]
+    // TODO: change this to use constant.
     if (key === '*') {
       callback.call(component, wrapper, component.props, component)
     } else {
+      // TODO: will this transpile to something different?
       // means: {new, old, changed}
       const {n, o, c} = component.lookup(key)
       if (c) {
@@ -240,7 +265,8 @@ proto.__ni = function(path, cls) {
  * @param {object} [prototypeExtras] - an object with extra things to be added to the prototype
  * @param {function} [prototypeExtras] - the function to be used as constructor
  */
-Component.prototype.__ex = function(baseClass, prototypeExtras, constructorFunction) {
+proto.__ex = function(baseClass, prototypeExtras, constructorFunction) {
+  // const base = baseClass || Component
   var subClass = constructorFunction || function(parent) {
     baseClass.call(this, parent)
   }
@@ -341,6 +367,6 @@ proto.__sv = function() {
 /**
  * Toggles visibility, like wrapper.
  */
-proto.visible = function(visible) {
-  this.e.classList.toggle('hidden', !visible)
+proto.hide = function(hidden) {
+  this.e.hidden = hidden
 }

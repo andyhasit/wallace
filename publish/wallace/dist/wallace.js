@@ -53,13 +53,10 @@ Wrapper.prototype = {
     return this
   },
   att: function(name, value) {
-    this.e.setAttribute(name, value);
-    return this
-  },
-  atts: function(atts) {
-    for (let name in atts) {
-      this.att(name, atts[name]);
-    }
+
+    console.log('att', value);
+    this.e[name] = value;
+    // this.e.setAttribute(name, value)
     return this
   },
   pool: function(pool) {
@@ -73,6 +70,7 @@ Wrapper.prototype = {
     return this
   },
   checked: function(value) {
+    console.log('checked', value);
     this.e.checked = !!value;
     return this
   },
@@ -143,7 +141,7 @@ Wrapper.prototype = {
   src: function(value) {
     return this.att('src', value)
   },
-  style: function(name, value) {
+  style: function(value, name) {
     this.e.style[name] = value;
     return this
   },
@@ -155,8 +153,11 @@ Wrapper.prototype = {
     this.e.textContent = value;
     return this
   },
-  visible: function(visible) {
-    this.e.classList.toggle('hidden', !visible);
+  hidden: function(value) {
+    // TODO: fix this - it works in browser, is it just tests?
+    this.e.classList.toggle('hidden', value);
+    // console.log('hidden', value)
+    // this.e.hidden = !value
     return this
   },
   value: function(value) {
@@ -442,7 +443,9 @@ Lookup.prototype = {
       // Verbose but efficient way as it avoids lookups?
       // Or is this harmful to performance because we're just reading values more than calling functions?
       let o = component.__ov[key];
+      // TODO: is this checking for watchOnce?
       o = und(o) ? '' : o; 
+      // console.log(key)
       const n = this.callbacks[key](component, component.props);
       const c = n !== o;
       component.__ov[key] = n;
@@ -477,6 +480,26 @@ function Component(parent) {
 } 
 
 
+
+Component.extend = function(opts) {
+  var base = opts._base || Component;
+  // TODO: do we care about allowing this?
+  // var NewComponent = opts.hasOwnProperty('constructor') ? opts.constructor : function(parent) {
+  
+  // TODO: This ends up being the name of the function, used in logging etc.
+  // Maybe change with Object.defineProperty() or use object hack {name: func....}
+  var CustomComponent = function(parent) {
+    base.call(this, parent);
+  };
+  delete opts._base;
+  CustomComponent.prototype = Object.create(base && base.prototype, {
+    constructor: { value: CustomComponent, writable: true, configurable: true }
+  });
+  Object.assign(CustomComponent.prototype, opts);
+  return CustomComponent
+};
+
+
 var proto = Component.prototype;
 
 proto.onUpdate = noop;
@@ -507,14 +530,17 @@ proto.init = function() {
  */
 proto.bubble = function(name) {
   let target = this.parent;
-  while (!und(target)) {
-    if (target[name]) {     
-      // We don't really care about performance here, so accessing arguments is fine.   
-      return target[name].apply(target,  Array.prototype.slice.call(arguments, 1))
+  while (target) {
+    // console.log(target.name)
+    let func = target[name];
+    if (func) {     
+      // We don't really care about performance here, so accessing arguments is fine.
+      // TODO: maybe we do care, so pass as array? Or use proxy?
+      return func.apply(target, Array.prototype.slice.call(arguments, 1))
     }
     target = target.parent;
   }
-  throw 'Bubble popped.'
+  throw new Error('Bubble popped.')
 };
 /**
  * Move the component to new parent. Necessary if sharing a pool.
@@ -588,7 +614,7 @@ proto.updateSelf = function() {
     shouldBeVisible = true;
     if (shieldQuery) {
       // Get the newValue for shieldQuery using lookup
-      shieldQueryResult = this.lookup(shieldQuery).n;
+      shieldQueryResult = !!this.lookup(shieldQuery).n;
 
       // Determine if shouldBeVisible based on reverseShield
       // i.e. whether "shieldQuery===true" means show or hide.
@@ -598,7 +624,7 @@ proto.updateSelf = function() {
       shieldCount = shouldBeVisible ? 0 : watch.sc;
 
       // Set the element visibility
-      wrapper.visible(shouldBeVisible);
+      wrapper.hidden(!shouldBeVisible);
       i += shieldCount;
     }
     if (shouldBeVisible) {
@@ -659,9 +685,11 @@ const applyWatchCallbacks = (component, wrapper, callbacks) => {
   
   for (let key in callbacks) {
     let callback = callbacks[key];
+    // TODO: change this to use constant.
     if (key === '*') {
       callback.call(component, wrapper, component.props, component);
     } else {
+      // TODO: will this transpile to something different?
       // means: {new, old, changed}
       const {n, o, c} = component.lookup(key);
       if (c) {
@@ -692,7 +720,8 @@ proto.__ni = function(path, cls) {
  * @param {object} [prototypeExtras] - an object with extra things to be added to the prototype
  * @param {function} [prototypeExtras] - the function to be used as constructor
  */
-Component.prototype.__ex = function(baseClass, prototypeExtras, constructorFunction) {
+proto.__ex = function(baseClass, prototypeExtras, constructorFunction) {
+  // const base = baseClass || Component
   var subClass = constructorFunction || function(parent) {
     baseClass.call(this, parent);
   };
@@ -793,8 +822,8 @@ proto.__sv = function() {
 /**
  * Toggles visibility, like wrapper.
  */
-proto.visible = function(visible) {
-  this.e.classList.toggle('hidden', !visible);
+proto.hide = function(hidden) {
+  this.e.hidden = hidden;
 };
 
 module.exports = {

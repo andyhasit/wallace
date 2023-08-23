@@ -21,13 +21,15 @@
     "prepublish": "npm run build",
     "build": "NODE_ENV=production rollup -c",
     "test": "jest --clearCache && jest",
-    "clear-jest": "jest --clearCache"
+    "jest-clear": "jest --clearCache"
   },
   "author": "Andrew Buchan",
   "license": "MIT",
   "dependencies": {
     "@babel/plugin-proposal-class-properties": "^7.18.6",
-    "babel-plugin-wallace": "^0.0.1"
+    "@babel/plugin-syntax-jsx": "^7.22.5",
+    "babel-plugin-wallace": "^0.0.1",
+    "jest-summary-reporter": "^0.0.2"
   },
   "gitHead": "1836ac0f2603fc33d9a51496480738792086c9d9",
   "devDependencies": {

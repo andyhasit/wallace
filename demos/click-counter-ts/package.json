@@ -1,0 +1,28 @@
+{
+  "name": "click-counter-ts",
+  "version": "1.0.0",
+  "description": "A demo of wallace",
+  "private": true,
+  "main": "index.js",
+  "devDependencies": {
+    "babel-loader": "^9.1.3",
+    "wallace": "^0.0.1",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^4.15.1"
+  },
+  "babel": {
+    "presets": [
+      "@babel/preset-env"
+    ],
+    "plugins": [
+      "babel-plugin-wallace",
+      "@babel/plugin-syntax-jsx",
+      "@babel/plugin-proposal-class-properties"
+    ]
+  },
+  "scripts": {
+    "start": "webpack serve"
+  },
+  "author": "Andrew Buchan",
+  "license": "ISC"
+}

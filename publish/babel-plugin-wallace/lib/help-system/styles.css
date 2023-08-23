@@ -1,0 +1,25 @@
+body {
+  background: #d0d0d0;
+  color: #3d3d3d;
+}
+
+.help-page {
+  margin: 20px auto;
+  padding: 5px 20px;
+  max-width: 500px;
+  border-radius: 8px;
+}
+
+h1 {
+  font-family: Hind, sans-serif;
+  font-weight: 700;
+  text-align: center;
+}
+
+.directive hr {
+  border: none;
+  width: 50%;
+  height: 1px;
+  margin-top: 2em;
+  background-color: #8a8888;
+}
