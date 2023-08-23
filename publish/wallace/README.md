@@ -1,3 +1,3 @@
-# Babel-plugin-wallace
+# Wallace
 
 See https://github.com/andyhasit/wallace

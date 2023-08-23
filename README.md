@@ -1,14 +1,10 @@
 # Wallace
 
-Brings you freedom.
+A front end framework.
 
 ## Status
 
 Currently in initial development. Do not use.
-
-## Overview
-
-Wallace is a fully open front end framework.
 
 ### Demos
 
