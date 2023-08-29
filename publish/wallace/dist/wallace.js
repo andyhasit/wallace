@@ -53,10 +53,7 @@ Wrapper.prototype = {
     return this
   },
   att: function(name, value) {
-
-    console.log('att', value);
     this.e[name] = value;
-    // this.e.setAttribute(name, value)
     return this
   },
   pool: function(pool) {
@@ -70,7 +67,6 @@ Wrapper.prototype = {
     return this
   },
   checked: function(value) {
-    console.log('checked', value);
     this.e.checked = !!value;
     return this
   },
@@ -155,9 +151,9 @@ Wrapper.prototype = {
   },
   hidden: function(value) {
     // TODO: fix this - it works in browser, is it just tests?
-    this.e.classList.toggle('hidden', value);
+    // this.e.classList.toggle('hidden', value)
     // console.log('hidden', value)
-    // this.e.hidden = !value
+    this.e.hidden = value;
     return this
   },
   value: function(value) {

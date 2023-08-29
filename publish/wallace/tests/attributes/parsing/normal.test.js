@@ -1,4 +1,4 @@
-const {load, withDirective} = require('../utils')
+const {load, withDirective} = require('../../utils')
 
 
 describe("Non directive attribute", () => {
@@ -12,17 +12,17 @@ describe("Non directive attribute", () => {
   })
 
   test("Retained if value is str", () => {
-    const code = `const Foo = <div class="foo">hello</div>`
+    const code = `const Foo = <div id="foo">hello</div>`
     const result = withDirective(code)
     expect(result.nodeData).toBe(undefined)
-    expect(result.code).toContain('<div class="foo">hello</div>')
+    expect(result.code).toContain('<div id="foo">hello</div>')
   })
 
   test("Removed and turned into dynamic attribute if value is expr", () => {
-    const Foo = <div class={bar}>hello</div>
-    const bar = "danger"
+    const Foo = <div id={bar}>hello</div>
+    const bar = "main"
     const component = load(Foo)
-    expect(component).toShow('<div>hello</div>')
-    expect(component.element.class).toBe("danger")
+    expect(component).toShow('<div id="main">hello</div>')
+    expect(component.element.id).toBe("main")
   })
 })

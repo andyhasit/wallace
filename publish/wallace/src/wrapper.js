@@ -137,9 +137,9 @@ Wrapper.prototype = {
   },
   hidden: function(value) {
     // TODO: fix this - it works in browser, is it just tests?
-    this.e.classList.toggle('hidden', value)
+    // this.e.classList.toggle('hidden', value)
     // console.log('hidden', value)
-    // this.e.hidden = !value
+    this.e.hidden = value
     return this
   },
   value: function(value) {

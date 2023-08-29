@@ -34,7 +34,7 @@ test("The :show directive stops its own element from updating.", () => {
   div.update()
   expect(div).toShow(`
     <div>
-      <div class="hidden">
+      <div hidden="">
         <div>1</div>
         <div>2</div>
         <div>3</div>
@@ -49,7 +49,7 @@ test("The :show directive stops its own element from updating.", () => {
   div.update()
   expect(div).toShow(`
     <div>
-      <div class="hidden">
+      <div hidden="">
         <div>1</div>
         <div>2</div>
         <div>3</div>
@@ -61,7 +61,7 @@ test("The :show directive stops its own element from updating.", () => {
   div.update()
   expect(div).toShow(`
     <div>
-      <div class="">
+      <div>
         <div>4</div>
         <div>5</div>
       </div>

@@ -3,7 +3,7 @@ import {load} from '../utils'
 const TestComponent =
   <div>
     <div show={p.show}>
-      <div call:text={A|p.message}/>
+      <div el:msg>{A|p.message}</div>
     </div>
   </div>
 
@@ -25,15 +25,18 @@ test("The :show directive stops shielded elements from updating.", () => {
       </div>
     </div>
   `)
+  expect(div.component.el.msg.e.hidden).toBe(false)
   props.show = false
   div.update()
   expect(div).toShow(`
     <div>
-      <div class="hidden">
+      <div hidden="">
         <div>hello</div>
       </div>
     </div>
   `)
+
+  expect(div.component.el.msg.e.hidden).toBe(false)
 
   // Now check that the shielded element is not updated if show is false.
   props.show = false
@@ -41,20 +44,22 @@ test("The :show directive stops shielded elements from updating.", () => {
   div.update()
   expect(div).toShow(`
     <div>
-      <div class="hidden">
+      <div hidden="">
         <div>hello</div>
       </div>
     </div>
   `)
 
+  expect(div.component.el.msg.e.hidden).toBe(false)
   // Now check that the shielded element did update.
   props.show = true
   div.update()
   expect(div).toShow(`
     <div>
-      <div class="">
+      <div>
         <div>goodbye</div>
       </div>
     </div>
   `)
+  expect(div.component.el.msg.e.hidden).toBe(false)
 })

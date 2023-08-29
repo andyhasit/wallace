@@ -53,20 +53,34 @@ const directives = {
     help: `
     Sets an HTML attribute on the element:
     
-    /h <div _att:hidden="x > 3"></div>
+    /h <div att:hidden="x > 3"></div>
     `,
     allow: "expr",
     qualifier: "yes",
     handle: function(nodeData, attInfo) {
       nodeData.addWatch(attInfo.args[0], attInfo.args[1], `@${attInfo.qualifier}`)
     }
-
+  },
+  bind: {help: `
+    Binds an event listener to an element:
+    
+    /h <div bind:keyup="p.count"></div>
+    `,
+    allow: "expr",
+    qualifier: "yes",
+    handle: function(nodeData, attInfo) {
+      const event = attInfo.qualifier
+      let [watch, transform] = attInfo.args
+      nodeData.addWatch(watch, undefined, 'value')
+      transform = transform ? transform : 'w.getValue()'
+      nodeData.addEventListener(event, `${watch} = ${transform}`)
+    }
   },
   call: {
     help: `
     Watch a value and call a wrapper method if it changes.
     
-    /h <div _call:method={watch, tranform}></div>
+    /h <div call:method={watch, transform}></div>
     
     Variables for watch: c, p
     Variables for callback: c, p, n, o, w
@@ -75,6 +89,12 @@ const directives = {
     qualifier: "yes",
     handle: function(nodeData, attInfo) {
       nodeData.addWatch(attInfo.args[0], attInfo.args[1], attInfo.qualifier)
+    }
+  },
+  cls: {
+    params: 'value',
+    handle: function(value) {
+      this.addWatch(neverUpdate, value, 'css')
     }
   },
   // checked: {
@@ -259,5 +279,15 @@ const directives = {
 }
 
 const config = new Config(directives)
+
+config.rules = {
+  attributes: {
+    class: function(attInfo) {
+      if (attInfo.argType === "expr") {
+        return '"class" attribute may not be made dynamic. Use "className" instead, or use css directives.'
+      }
+    }
+  }
+}
 
 module.exports = {config}

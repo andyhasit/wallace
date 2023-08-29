@@ -86,7 +86,17 @@ class JSXElementConverter extends BaseConverter {
   processAttribute = (attr) => {
     const {argType, name, value} = attr
     const nameLowerCase = name.toLowerCase()
+
+    const rule = config.rules.attributes[nameLowerCase]
+    const error = rule && rule(attr)
+    
+    // TODO: allow warnings too?
+    if (error) {
+      throw this.path.buildCodeFrameError(error)
+    }
+    
     const directive = directives.hasOwnProperty(nameLowerCase) && directives[nameLowerCase]
+    // console.log(name, argType, value, directive)
     if (directive && ! attr.escaped) {
       this.processDirective(directive, nameLowerCase, attr)
     } else {

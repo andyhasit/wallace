@@ -1,4 +1,4 @@
-const {withDirective} = require('../utils')
+const {withDirective} = require('../../utils')
 
 
 describe("Directive with qualifier=yes", () => {
