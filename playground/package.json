@@ -10,7 +10,7 @@
     "check": "babel $@",
     "start": "webpack serve",
     "size": "gzip -fk dist/index.js && du -b dist/index.js.gz",
-    "rebuild-plugin": "cd ../pkgs/babel-plugin-wallace && npx tsc"
+    "rebuild-plugin": "cd ../packages/babel-plugin-wallace && npx tsc"
   },
   "author": "Andrew Buchan",
   "license": "ISC",

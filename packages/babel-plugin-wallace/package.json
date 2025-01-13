@@ -9,12 +9,12 @@
     "/dist"
   ],
   "scripts": {
-    "test": "echo \"Tests are in pkgs/wallace.\"",
+    "test": "echo \"All tests are in packages/wallace.\"",
     "prepack": "shx rm -rf dist/* && tsc"
   },
   "dependencies": {
     "@babel/plugin-syntax-jsx": "^7.22.5",
-    "jsdom": "^22.1.0"
+    "jsdom": "^26.0.0"
   },
   "devDependencies": {
     "@types/node": "^22.8.1",

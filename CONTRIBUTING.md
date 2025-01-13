@@ -1,44 +1,60 @@
 # Contributor docs
 
-This guide is for project contributors, it covers many technical aspects in depth.
+## Quick start
 
-## Getting started
+### Installation
 
-### Repository structure
+This project uses [npm workspaces](https://ruanmartinelli.com/posts/npm-7-workspaces-1/), so you can install all packages at once from root directory:
 
-There are four top level directories:
+```sh
+npm i
+```
 
-| Directory   | Contents                                |
-| ----------- | --------------------------------------- |
-| **canary**  | The canary app (see below)              |
-| **docs**    | Documentation.                          |
-| **wallace** | The packages and playground (see below) |
-| **tools**   | Scripts and tools                       |
+This will only create a **node_modules** directory at root, and in packages whose dependencies differ, so don't worry if some packages don't have their own.
 
-#### The wallace directory
+It will also symlink local dependencies, including **wallace** and **babel-plugin-wallace**. The latter needs to be compiled before you can use it:
 
-This directory uses [npm workspaces](https://ruanmartinelli.com/posts/npm-7-workspaces-1/) to manage dependencies (see installation below). It contains the `wallace` and `babel-plugin-wallace` packages as well as tests, and the playground.
+```sh
+cd packages/babel-plugin-wallace
+npx tsc
+```
 
-#### The playground app
+You will need recompile **babel-plugin-wallace** whenever you make any changes to it, but **wallace** is not compiled so your changes should appear immediately.
 
-This is a wallace app whose source files are ignored by git. It lets you play around with wallace in its current development state.
+### Running tests
 
-##### The canary app
+All the tests are in **packages/wallace** and can be run with:
 
-This app's purpose is to ensure that wallace installs all its dependencies correctly.
+```sh
+cd packages/wallace
+npm test
+```
 
-It needs to be in a directory not underneath `wallace` as to ensure it doesn't pick up dependencies the hoisted `node_modules` in there, which would mask any issues. For example, if the plugin requires a package to work but specifies it as a devDependency, it would work in tests but an isolated installation would fail.
+However this runs all the tests, and during development you may want to restrict this. See the section on tests below.
 
-Maybe this doesn't happen anymore now we've switched from Lerna to npm workspaces, but better be sure.
+### Using the playground
+
+The **playground** package allows you to experiment without committing changes, as its **src** directory is gitignored.
+
+To launch it, run:
+
+```
+cd playground
+npm start
+```
+
+If you get errors about packages not being found, it may be that third party packages (such as JSDOM) need updating.
+
+
 
 ### Packages
 
-Wallace requires two packages to work: 
+User projects requires two packages to work: 
 
 - **wallace** - the library with definitions you import into a project.
 - **babel-plugin-wallace** - the babel plugin which transforms the source code.
 
-A project will typically only require `wallace` but that always depends on `babel-plugin-wallace` at the same version, so this would install both at `0.0.7`:
+A project will typically only require `wallace` which always depends on `babel-plugin-wallace` at the same version, so this would install both at `0.0.7`:
 
 ```bash
 npm i wallace@0.0.7
@@ -46,22 +62,21 @@ npm i wallace@0.0.7
 
 We publish a new  matching version of both packages even if only one has actual changes.
 
-### Installation
 
-Due to the issues mentioned above, different parts of this repository install separately.
 
-##### Packages
+## Development
 
-This directory uses [npm workspaces](https://ruanmartinelli.com/posts/npm-7-workspaces-1/) to manage dependencies, which will be hoisted to `src/node_modules` for all underlying workspaces.
+### Third party tools
 
-```sh
-cd src
-npm i
-```
+This project uses:
 
-If you find `node_modules` inside other packages, it means it uses a different version of a dependency (perhaps playground didn't update to the latest wallace).
+* [npm workspaces](https://ruanmartinelli.com/posts/npm-7-workspaces-1/) to cross-install dependencies.
+* [lerna](https://lerna.js.org/) to publish packages.
+* [jest](https://jestjs.io/) for tests.
 
-We should add a check to prevent this.
+Try follow [Mozilla Guidelines](https://developer.mozilla.org/en-US/docs/MDN/Writing_guidelines/Writing_style_guide/Code_style_guide/JavaScript) except:
+
+* End your comments with a full stop, so it's clear you intended to finish the sentence.
 
 ##### Canary
 
@@ -72,11 +87,9 @@ cd canary
 npm i
 ```
 
-## Development
+#### The playground app
 
-Try follow [Mozilla Guidelines](https://developer.mozilla.org/en-US/docs/MDN/Writing_guidelines/Writing_style_guide/Code_style_guide/JavaScript) except:
-
-* End your comments with a full stop, so it's clear you intended to finish the sentence.
+This is a wallace app whose source files are ignored by git. It lets you play around with wallace in its current development state.
 
 ### Running tests
 
