@@ -23,6 +23,9 @@ coverage
 # Dependency directories
 node_modules/
 
+# Dist directories
+dist/
+
 # Snowpack dependency directory (https://snowpack.dev/)
 web_modules/
 

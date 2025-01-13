@@ -1,0 +1,21 @@
+{
+  "name": "wallace",
+  "version": "0.0.4",
+  "author": "Andrew Buchan",
+  "description": "The framework that brings you glee.",
+  "license": "ISC",
+  "main": "lib/index.js",
+  "files": [
+    "/lib"
+  ],
+  "types": "./lib/types.d.ts",
+  "scripts": {
+    "test": "jest --clearCache && jest",
+    "check": "babel $@",
+    "rebuild-plugin": "cd ../babel-plugin-wallace && npx tsc"
+  },
+  "dependencies": {
+    "babel-plugin-wallace": "^0.0.4",
+    "browserify": "^17.0.1"
+  }
+}
