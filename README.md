@@ -1,448 +1,217 @@
 # Wallace
 
-*Brings the joy back to front end development.*
+*The framework that gives you back your freedom!*
 
-## What is it?
+**[npmjs.com/package/wallace](https://www.npmjs.com/package/wallace)** 
 
-Wallace is a framework for building dynamic web UIs using modern JavaScript or TypeScript, much like React, Angular, Vue, Svelte etc. 
+[**github.com/andyhasit/wallace**](https://github.com/andyhasit/wallace)
 
-Compared to those, Wallace is:
+## What
 
-* **Cleaner** - you'll end up with far more readable code, letting you work quicker.
-* **Faster** - this deserves its own section, see [performance](#permformance).
-* **Safer** - there's almost nothing to break, and if it does, the fix is easy.
+Wallace is a UI framework you can (and hopefully will) use in place of React, Angular, Svelte, Vue, Solid etc.
 
-But most of all, Wallace is a whole lot more **enjoyable** to work with. You'll love it.
+## Why
 
-## Quick tour
+Compared to other frameworks, Wallace:
 
-### A reactive click counter
+* Is much **simpler** to use (learn everything in ~25 min).
+* Produces **smaller** bundles.
+* Runs a lot **faster**.
+* Results in **cleaner** code.
+* Has more **powerful** architectural and optimisation capabilities.
 
-<div>
-    <button>New</button>
-    <button>3</button>
-    <button>0</button>
-    <button>1</button>
-<div>
+But what makes Wallace unique is that you get all this without losing your **freedom**.
 
+Most frameworks don't let you interact with the DOM they control, or change the way they control it. You don't often need to do this, but if you do and you can't, then you're in real trouble.
 
-To use Wallace, simply define a tree of components using JSX syntax and attach the root component to a DOM element:
+Wallace lets you do both those things. You can also do anything you could do in vanilla JS, but with added scaffolding to do it safely and easily. This means you will never, ever be cornered by the framework, and also able to match vanilla speeds if you need to.
 
-```jsx
-import {attach} from 'wallace'
+Of course you may never need that, in which case you can just enjoy a **simpler**, **smaller**, **faster**, **cleaner** and more **powerful** tool to work with.
 
-const ClickCounter = (counter) => (
-  <button onClick={counter.clicks ++}>
-    {counter.clicks}
-  </button>
-);
+## Installation
 
-const ClickCounterApp = (counters) => (
-  <div reactive>
-    <button onClick={counters.push({clicks: 0})}>Add Counter</button>
-    <ClickCounter repeat={counters} />
-  </div>
-);
+TODO: offer blitzstack, or create-app.
 
-attach("some-div-id", ClickCounterApp, [{clicks: 0}]);
+#### Manual
+
+Install `wallace` (which installs `babel-plugin-wallace` at the same version) and save to your dev dependencies:
+
+```sh
+npm i wallace --save-dev
 ```
 
-Although it looks like this could be React code, there are three key differences:
-
-1. The `onClick` expressions are calls, not callbacks.
-2. The `ClickCounter` is repeated using a `repeat` attribute, rather than being wrapped in a loop expression.
-3. Everything seems to update by itself without any `setProps()` or state hooks, thanks to that `reactive` attribute.
-
-Explaining these differences conveniently summarise how Wallace works.
-
-#### Explanation
-
-##### Interpreted JSX
-
-Although we use JSX syntax, it doesn't work like JSX. Wallace *reads* JSX during compilation and replaces it with generated code, rather than *executing* at run time. 
-
-This restricts what you can do inside the JSX. You can't wrap elements in expressions for example:
-
-```jsx
-const people = ['jane', 'jemima', 'jessica']
-const People = (
-  <ul>
-   {/* --- This is not allowed --- */}
-   {people.map(name => (
-     <Person props={name.toUpperCase()} />
-   ))}
-  </ul>
-)
-```
-
-Instead you use special attributes called "directives" such as `repeat` to achieve the same result, but with less clutter in your JSX:
-
-```jsx
-const people = ['jane', 'jemima', 'jessica']
-const Person = (name) => <li>{name.toUpperCase()}</li>
-const People = (
-  <ul>
-    <Person repeat={['jane', 'jemma', 'jessica']} />
-  </ul>
-)
-```
-
-##### Directives
-
-Wallace has many directives which do a variety of useful things, but you only need to remember one:
-
-```jsx
-const MyFirstComponent = (
-  <div help>
-    I don't know what I'm doing...
-  </div>
-)
-```
-
-This brings up an interactive helper in your browser which documents all the directives. It works offline, so you can develop apps while sitting on a tropical beach.
-
-Directives run during compilation, not at run time, which has two main implications:
-
-1. A directive may do all sorts of validation and fancy logic without slowing down your app. All that goes into your bundle is the generated code, not the logic used to build it.
-2. We can create as many directives as we like, with different permutations.
-
-This lets us provide clean and powerful syntax which results in the most efficient code.
-
-Of course you can define your own directives, which get displayed in the interactive helper too.
-
-##### Expressions
-
-Code expressions in JSX get moved to a new location in the generated code, possibly with some transformation. The buttons work because the code in the expression gets pasted into a function which gets called by the `onClick` handler:
+Add this to your **babel.config.cjs** or equivalent:
 
 ```js
-function (props, event, component) {
-  props.clicks ++
+module.exports = {
+  plugins: ["babel-plugin-wallace", "@babel/plugin-syntax-jsx"],
+};
+```
+
+And add this to your **tsconfig.json** file if using TypeScript:
+
+```
+{
+  "compilerOptions": {
+    "jsx": "preserve",
+  },
 }
 ```
 
-If you'd rather pass a callback you can, and even get to choose which arguments get passed in what order by passing a flag to the `onClick` directive which can contain letters **e**, **p** and **c** for event, props and component respectively
+You'll also need a bundler like [Webpack](https://webpack.js.org/), [Parcel](https://parceljs.org/) or [Vite](https://vite.dev/). 
 
-```jsx
-const incrementClicks = (event, props) => {
-  event.preventDefault()
-  props.clicks +1
-}
+## Syntax
 
-const ClickCounter = (counter) => (
-  <button onClick:ep={incrementClicks}>
-    {counter.clicks}
-  </button>
-);
-```
+Wallace was designed to bring you freedom. However, at first glance it looks like a cheap React clone with a lot less freedom :-| 
 
-Flags let us change the behaviour of directives, creating even more powerful syntax options.
+You can define components as functions which return JSX, just like React:
 
-##### Reactivity
+```tsx
+import { mount } from "wallace";
 
-The `reactive` directive tells a component to wraps its props in a proxy which detects mutations to itself, and tells component to update when that happens.
-
-So when you click any of the buttons, the `ClickCounterApp` component updates itself, and then its child components.
-
-
-
-It detects modifications in nested items too, so when `ClickCounter` changes a single counter, the `ClickCounterApp` updates.
-
-causes a component update when its props object is modified (that's modified, ) regardless of where it is modified
-
-That's modified, not when new 
-
-Reactivity frameworks look in a tutorial, but
-
- in the real world the bugs they cause will drain your client's budget and your to live.
-
-
-
-
-
-Plan:
-
-* Explain why it's bad, where you use it, and when you don't
-* Understand that components update
-
-
-
-tells a component to wrap its props (in this case an array of objects) in an object which detects changes, which trigger an update of the component.
-
-```jsx
-const incrementClicks = (counter) => counter.clicks +1;
-const addCounter = (counters) => counters.push({clicks: 0});
-const total = (counters) => counters.reduce((c, acc) => c.clicks + acc, 0)
-
-const ClickCounter = (counter) => (
-  <button onClick:p={incrementClicks}>
-    {counter.clicks}
-  </button>
-);
-
-const ClickCounterApp = (counters) => (
-  <div reactive >
-    <span>Total: {total(counters}</span>
-    <button onClick:p={addCounter}>Add Counter</button>
-    <ClickCounter repeat={counters} />
-  </div>
-);
-```
-
-
-
-~~Fully reactive frameworks may look impressive in a tutorial, but in the real world they invariably drain the client's budget and the developer's will to live by causing endless subtle bugs that are time consuming to diagnose, hard to detect and easy to regress on.~~
-
-Reactive frameworks tend to wow us in their tutorials, but shaft us in real life with subtle bugs that are hard to diagnose, which will drain your client's budget and your to live.
-
-Yet reactivity is very useful in places such as forms, which are a pain to work with in a totally non-reactive framework, like React. Wallace gives you the best of both worlds by only being reactive where you tell it to be. 
-
-
-
-replaces a component's props with an object which 
-
-
-
-wrap its props in a proxy which updates that component whenever the props object is modified. So when the `ClickCounter` modifies its props object, the `ClickCounterApp` updates, and that update cascades down to the `ClickCounter`.
-
-The reactive behaviour is isolated and predictable. However, it should still only be used for components which are supposed to change their own data, like a form which is yet to be submitted.
-
-
-
-### Non-reactive click counter
-
-Rather than pass down a plethora of bound callbacks, a much saner approach is to create a single object which contains the state and methods for working with it, and passing that down the component tree. We call that a hub:
-
-```js
-class Hub {
-  constructor() {
-    this.counters = [{clicks: 0}]
-    this.root = undefined
-  }
-  getCounters() {
-     return this.counters.map((counter) > {counter, hub: this})
-  }
-  add() {
-    this.counters.push({clicks: 0})
-    this.root.update()
-  }
-  increment(counter) {
-    counter ++
-    this.root.update()
-  }
-}
-```
-
-
-
-```jsx
-import { attach } from 'wallace'
-import { Hub } from './hub'
-
-const ClickCounter = ({counter, hub}) => (
-  <button onClick={hub.increment(counter)}>
-    {counter.clicks}
-  </button>
-);
-
-const ClickCounterApp = (hub) => (
-  <div saveAs:root>
-    <button onClick={hub.add()}>Add Counter</button>
-    <ClickCounter repeat={hub.getCounters()} />
-  </div>
-);
-
-attach("some-div-id", ClickCounterApp, new Hub());
-```
-
-All the calls in JSX are now calls to hub methods. Our components are now rather dumb and vacant (or to use the Scots term: *wallace*) components which do little more than ferry calls and control display. 
-
-And this is exactly how you want it. If anything is broken, there's a 97% chance its in the `Hub` class, which is plain JavaScript with no framework code in sight. A framework is a black box which you can't see into.
-
-There's no way to explain how much time this saves you. Wallace's genius lies in not doing any thinking for you.
-
-You're only using the framework to update the DOM, nothing more.
-
-
-
-```jsx
-<div beforeUpdate={}></div>
-```
-
-
-
-
-
-Directives help you move logic out of your JSX, letting it act as a clear view of the DOM structure with minimal annotations to highlight the dynamic parts.
-
-This is important, as **visibility** of what you're working with is one the three critical factors to productivity. The other two are **predicitibility** and **delinieation**.
-
-An equally important factor is **delineation**. If your logic is embedded inside framework constructs and it stops working, then
-
-Just as importantly, all the logic you move *out* becomes non-framework code. If the code above stops working, it is easy to determine whether the fault is in `incrementClick` or the JSX.
-
-act as clean and uncluttered  
-
-Because its more compact, you can group them together.
-
-You might not stomach going back to React.
-
-Moving logic out of your components into functions or objects has another major advantage: its non framework code. 
-
-This is so important, because things go wrong...
-
-
-
-only for ...
-
-
-
-so you get the benefits without the risks.
-
-
-
- The `reactive` directive tells a component to watch its props, and call `this.update()` whenever it is modified.
-
-It is isolated. 
-
-The reason the `ClickCounter` also triggers the update is because the props is the same object objects are passed down to  object, changing those also triggers the root update.
-
-If we removed the `reactive` directive from our example, we'd have to update the `ClickCounterApp` manually after every change. 
-
-This is easily done for the case of adding a new counter:
-
-```jsx
-const addCounter = (counters, component) => {
-  counters.push({clicks: 0});
-  component.update()
-}
-
-const ClickCounterApp = (counters, component) => (
+const Task = ({ text, done }) => (
   <div>
-    <button onClick={addCounter(counters, component)}>Add Counter</button>
-    <ClickCounter repeat={counters} />
+    <input type="checkbox" checked={done} />
+    <span style:color={done ? 'grey' : 'black'}>
+      {text}
+     </span>
+  </div>
+);
+
+mount("main", Task, { text: "Learn Wallace", done: false });
+```
+
+But other than the enclosing function, you're not allowed any JavaScript *around* JSX elements, so no conditionals or loops:
+
+```tsx
+// THIS IS NOT ALLOWED
+const TaskList = (tasks) => (
+  <div>
+    {tasks.map(({ text, done }) => (
+      <Task text={text} done={done} />
+    ))}
   </div>
 );
 ```
 
-But how about when we increment a count?
+You're also not allowed any JavaScript before the JSX:
 
-There are several convoluted ways in which you could do this, among the worst of which feature in the React guide.
-
-But there is a better way.
-
-## Status
-
-Wallace is still under active development.
-
-### Usage
-
-It is not ready to use, but here are some notes for when it is.
-
-##### Webpack
-
-In development mode set the following to point stack traces to your source code:
-
-```
-config.devtool = "eval-source-map";
-```
-
-If you don't set devtools, then you will see the generated code, which can be quite useful when debugging Wallace itself.
-
-```jsx
-import React, { useState } from 'react';
-
-function App() {
-  // State to keep track of counters
-  const [counters, setCounters] = useState([]);
-
-  // Function to add a new counter
-  const addCounter = () => {
-    setCounters([...counters, 0]); // Initializing each new counter to 0
-  };
-
-  // Function to handle click event for a counter button
-  const handleCounterClick = (index) => {
-    const newCounters = [...counters];
-    newCounters[index] += 1; // Incrementing the count for the clicked button
-    setCounters(newCounters);
-  };
-
+```tsx
+// THIS IS NOT ALLOWED
+const Task = ({ text, done }) => {
+  const color = done ? 'grey' : 'black';
   return (
     <div>
-      <h1>Dynamic Counter Buttons</h1>
-      <div>
-        {counters.map((count, index) => (
-          <button 
-            key={index} 
-            onClick={() => handleCounterClick(index)}
-            style={{ margin: '5px' }}
-          >
-            Button {index + 1} - Clicked {count} times
-          </button>
-        ))}
-      </div>
-      <button onClick={addCounter} style={{ marginTop: '20px' }}>
-        Add Counter
-      </button>
+      <input type="checkbox" checked={done} />
+      <span style:color={color}>{text}</span>
     </div>
-  );
-}
-
-export default App;
+  )
+};
 ```
 
-##### Updates
+This doesn't feel like freedom at all, but as it turns out, these restrictions open more doors than they close. We'll get to that, but first let's see how Wallace handles repeat syntax:
 
-Our app currently updates as soon as the data changes thanks to the `reactive` directive, which we'll look at next. Without it, you must explicitly tell components to update after data changes.
-
-You can either do that by passing new props with `setProps()` or `update()` if you're keeping the existing props.
-
-One way to do this is by passing a reference to the component to callbacks:
-
-```jsx
-const incrementClicks = (component, counter) => {
-  counter.clicks +1;
-  component.update();
-}
-
-const ClickCounter = (counter) => (
-  <button onClick:cp={incrementClicks}>
-    {counter.clicks}
-  </button>
-);
-```
-
-Of course, that only updates the `ClickCounter` component that was clicked. While you could do the same for the `Add Counter` button
-
-```jsx
-const addCounter = (counters, component) => {
-  counters.push({clicks: 0});
-  component.update();
-}
-
-const ClickCounterApp = (counters) => (
+```tsx
+const TaskList = (tasks) => (
   <div>
-    <button onClick:pc={addCounter}>Add Counter</button>
-    <ClickCounter repeat={counters} />
+    <Task.repeat props={tasks} />
   </div>
 );
 ```
 
+Wallace uses special tag conventions plus attributes (called directives) to do its thing - leaving your JSX clean, compact and correctly indented.
 
+### Special tags
 
-The components look a lot cleaner with the operations moved out to functions - something we'll revisit in a bit.
-
-
-
-no setProps. Same object.
-
-clean
-
-
-
-issue: totals
+There are just two special tag formats for nesting components:
 
 ```jsx
+// Nest a component, passing an object as props:
+<Task.nest props={task} />
 
+// Repeat a component, passing an array of objects as props:
+<Task.repeat props={tasks} />
 ```
 
+Passing all the props in one attribute is just a lot cleaner. If you need to transform the object first, you outsource that to a function:
+
+```jsx
+<Task.nest props={getTaskProps(task)} />
+```
+
+The only other special tag is for stubs:
+
+```jsx
+// Define a stub, which components that extend this component can override:
+<div>
+  <stub:title />
+  <stub:body />
+</div>
+```
+
+As will become clear, Wallace works very differently to React, and is a lot more powerful.
+
+### Directives
+
+Directives are special attributes which can do just about anything:
+
+```tsx
+// Show the help panel on your browser so you don't have to remember all this:
+<div help></div>
+
+// Conditionally show/hide elements:
+<div hide={done}>Schedule task</div>
+<div show={done}>Archive task</div>
+
+// Set up a class toggle:
+<div class="mt-2 p1" css:overdue="red" toggle:overdue={!done}></div>
+
+// Use variables in attributes, but only once:
+<div static:class={clunkyClassString}></div>
+<div static:style={clunkyStyleDefinition}></div>
+
+// Make a component reactive:
+<div reactive></div>
+
+// Bind an element propery to a value:
+<input type="checkbox" bind:checked={done} />
+
+// Debounce an event:
+<input type="text" debounce:onKeyUp={500} onKeyUp={handleKeyUp(e, text)}/>
+
+// Log the component props when it is updated:
+<div debug></div>
+
+// And of course, you can define your own directives:
+<div so:bad={ass}></div>
+```
+
+The cool part about directives is that they operate during compilation.
+
+### Compilation
+
+Wallace uses its own Babel plugin, which you add to your **babel.config.cjs** or equivalent:
+
+```js
+module.exports = {
+  plugins: ["babel-plugin-wallace", "@babel/plugin-syntax-jsx"]
+}
+```
+
+The plugin looks for function that only contain JSX, which are deemed to be components. It parses their JSX and replaces the entire function with generated code. Directives hook into this and add or modify the generated code.
+
+ Bear in mind this is all done during compilation, which means:
+
+1. A component function will *never be executed*. Its source code will be *read*, then *replaced*, well before the code is loaded into the browser.
+2. The JSX will also be read, not executed, which is why you're not allowed JavaScript around elements.
+3. The code which interprets directives, including the directive code itself, doesn't make it into the browser. Only the generated code does.
+
+This allows us (or you) to create really powerful syntax without denting bundle size or performance.
+
+The generated code creates a constructor function along with a prototype. When you mount or nest a component definition, Wallace creates a component instance:
+
+```tsx
+const component = new TaskList()
+```
+
+So unlike React, your components are real objects, which you can pass around, and whose prototypes you can extend or modify. This has interesting implications which we'll cover later.
