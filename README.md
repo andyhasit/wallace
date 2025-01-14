@@ -60,11 +60,13 @@ And add this to your **tsconfig.json** file if using TypeScript:
 
 You'll also need a bundler like [Webpack](https://webpack.js.org/), [Parcel](https://parceljs.org/) or [Vite](https://vite.dev/). 
 
-## Syntax
+## Quick tour
+
+You work in jsx/tsx files.
 
 Wallace was designed to bring you freedom. However, at first glance it looks like a cheap React clone with a lot less freedom :-| 
 
-You can define components as functions which return JSX, just like React:
+You define components as functions which return JSX (so in a jsx/tsx file) just like React:
 
 ```tsx
 import { mount } from "wallace";
@@ -94,7 +96,7 @@ const TaskList = (tasks) => (
 );
 ```
 
-You're also not allowed any JavaScript before the JSX:
+You're also not allowed any JavaScript *before* the JSX:
 
 ```tsx
 // THIS IS NOT ALLOWED
@@ -142,20 +144,24 @@ Passing all the props in one attribute is just a lot cleaner. If you need to tra
 The only other special tag is for stubs:
 
 ```jsx
-// Define a stub, which components that extend this component can override:
-<div>
-  <stub:title />
-  <stub:body />
+<div class="modal-dialog">
+  <h3>{title}</h3>
+  <div class="content">
+     <stub:body />
+  </div>
+  <div class="btn-row">
+    <stub:buttons />
+  </div>
 </div>
 ```
 
-As will become clear, Wallace works very differently to React, and is a lot more powerful.
+These are placeholders that you implement in components which extend this one, allowing much more code reuse than React.
 
 ### Directives
 
 Directives are special attributes which can do just about anything:
 
-```tsx
+```jsx
 // Show the help panel on your browser so you don't have to remember all this:
 <div help></div>
 
@@ -186,25 +192,45 @@ Directives are special attributes which can do just about anything:
 <div so:bad={ass}></div>
 ```
 
-The cool part about directives is that they operate during compilation.
+Directives transform code during compilation, meaning the code which powers them doesn't end up in your bundle, only a small amount of transformed or generated code does.
 
 ### Compilation
 
-Wallace uses its own Babel plugin, which you add to your **babel.config.cjs** or equivalent:
+Wallace uses its own Babel plugin, which looks for function that return JSX, and *replaces the whole function* with a constructor function and prototype:
 
-```js
-module.exports = {
-  plugins: ["babel-plugin-wallace", "@babel/plugin-syntax-jsx"]
-}
+```tsx
+const Task = function () {...}
+Task.prototype = {...}
 ```
 
-The plugin looks for function that only contain JSX, which are deemed to be components. It parses their JSX and replaces the entire function with generated code. Directives hook into this and add or modify the generated code.
+* Note its not the same function.
+
+Directives simply hook into this process and modify the generated code.
+
+These constructor functions are used to create new instances of the component when nested or mounted:
+
+```jsx
+const component = new Task()
+```
+
+
+
+
+
+
+
+This constructor function is not the same function as was in your source code. That function was 
+
+This means the function in your source code will *never be executed*. Instead the code is *parsed* and transformed. This is why you aren't allowed JavaScript before or around the JSX - it would simply never run.
+
+You are allowed to place JavaScript inside expressions, and these get copied to the generated code.
+
+
 
  Bear in mind this is all done during compilation, which means:
 
 1. A component function will *never be executed*. Its source code will be *read*, then *replaced*, well before the code is loaded into the browser.
 2. The JSX will also be read, not executed, which is why you're not allowed JavaScript around elements.
-3. The code which interprets directives, including the directive code itself, doesn't make it into the browser. Only the generated code does.
 
 This allows us (or you) to create really powerful syntax without denting bundle size or performance.
 
@@ -214,4 +240,20 @@ The generated code creates a constructor function along with a prototype. When y
 const component = new TaskList()
 ```
 
-So unlike React, your components are real objects, which you can pass around, and whose prototypes you can extend or modify. This has interesting implications which we'll cover later.
+
+
+### Real components
+
+So unlike React, your components are real objects, which you can pass around, and whose prototypes you can extend or modify. 
+
+This changes how you work with them. No ugly patterns like hooks.
+
+Many are non-repeated.
+
+Then talk about controllers.
+
+
+
+
+
+### OOP
