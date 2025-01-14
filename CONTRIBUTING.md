@@ -43,9 +43,7 @@ cd playground
 npm start
 ```
 
-If you get errors about packages not being found, it may be that third party packages (such as JSDOM) need updating.
-
-
+If you get errors about packages not being found, it may be that a third party package (such as JSDOM) need updating.
 
 ### Packages
 
@@ -54,15 +52,13 @@ User projects requires two packages to work:
 - **wallace** - the library with definitions you import into a project.
 - **babel-plugin-wallace** - the babel plugin which transforms the source code.
 
-A project will typically only require `wallace` which always depends on `babel-plugin-wallace` at the same version, so this would install both at `0.0.7`:
+Note that `wallace` always requires `babel-plugin-wallace` at the exact same version, so a user project would only need to require `wallace`
 
 ```bash
 npm i wallace@0.0.7
 ```
 
-We publish a new  matching version of both packages even if only one has actual changes.
-
-
+To maintain consistency we publish a new version of both packages even if only one has actual changes.
 
 ## Development
 
@@ -78,28 +74,9 @@ Try follow [Mozilla Guidelines](https://developer.mozilla.org/en-US/docs/MDN/Wri
 
 * End your comments with a full stop, so it's clear you intended to finish the sentence.
 
-##### Canary
-
-As mentioned above, the canary app installs separately:
-
-```sh
-cd canary
-npm i
-```
-
-#### The playground app
-
-This is a wallace app whose source files are ignored by git. It lets you play around with wallace in its current development state.
-
-### Running tests
-
-See Tests section below.
-
 ### Workspaces
 
 You can use the `-w` argument on most `npm` commands to apply that solely to one workspace:
-
-TODO: check syntax?
 
 ```sh
 npm install tap --workspace package-b --save-dev
@@ -108,7 +85,7 @@ npm run test --workspace=a
 
 Alternatively just `cd` to that directory.
 
-### Branching
+### Branches
 
 * The main branch is **develop**, and that's where we prepare the next release. 
 * Test must always pass in **develop**.
@@ -118,10 +95,12 @@ Alternatively just `cd` to that directory.
 
 The rules are:
 
-* If it is required for testing, it goes in the root **package.json** (src) (change this if tests are on their own?)
-* If it is required for the distribution of a package, it goes into its own **package.json** <u>dependencies</u> (devDependencies do not see to be installed).
+1. If it is required just for testing, it goes in the root **package.json**.
+2. If it is required for the distribution of a package, it goes that package's **package.json** `dependencies` (not `devDependencies` as these do not get installed).
 
-### Inspecting
+It is easy to get this wrong, which is why we (will) have a canary test which installs just `wallace` into a project (outside of workspaces) and would fail to run babel if any packages are missing.
+
+### Inspecting generated code
 
 It is often useful to inspect the generated code, which you can do in two ways:
 
@@ -146,6 +125,199 @@ config.devtool = "eval-source-map";
 The browser'd dev console will point error points and console logs to your ES6 source files. However, if you don't set `devtool` then it shows you the generated code.
 
 Given how useful this is, the webpack files in this project use an environment variable to let you control this behaviour without having to modify the file.
+
+## The babel plugin
+
+If you're going to make serious changes to the plugin you'll need to  read [the plugin handbook](https://github.com/jamiebuilds/babel-handbook/blob/master/translations/en/plugin-handbook.md). 
+
+#### TypeScript
+
+There is very little documentation on writing a Babel in TypeScript, other than [this issue](https://github.com/babel/babel/issues/10637). The plugin needs to be compiled to CommonJS to work with node. See **package.json** scripts.
+
+#### Presets
+
+Babel will typically read from the local **babel.config.cjs** which should look like this:
+
+```js
+module.exports = {
+  plugins: ["babel-plugin-wallace", "@babel/plugin-syntax-jsx"],
+  presets: ["@babel/preset-typescript", "@babel/preset-env"],
+};
+```
+
+However, this plugin must work if either of those presets are missing (and to a degree, if others are added) so it is important to test changes with each permutation.
+
+There should be tests which check this, but if making changes to the visitors then it is worth checking explicitly.
+
+#### Tests
+
+We do not test the plugin in isolation as:
+
+1) The generated code depends on the wallace library, so we test over there.
+2) The resulting output changes too often over time to validate maintaining tests.
+3) The internal code changes too much to validate testing bits of that.
+
+So we make sure to cover anything we think might break in the wallace tests, even if it doesn't seem obvious from there why it would.
+
+#### Checking output
+
+You can see the effect of the plugin by running a file through babel with npx:
+
+```
+npx babel src/index.jsx
+```
+
+The playground app's `babel.config.cjs` has toggles to disable presets, and npm scripts to run checks. Bear in mind you need to recompile if you've made any changes.
+
+### Babel notes
+
+These are just pertinent notes/reminders from the [Babel handbook](https://github.com/kentcdodds/babel-plugin-handbook/blob/master/README.md), which you should read. The [AST explorer](https://astexplorer.net/) is also very helpful, except it doesn't do JSX.
+
+#### Overview
+
+Babel is a tool which parses source code into an AST and traverses the nodes. Babel itself doesn't transform anything, it's the plugins which do that.
+
+Plugins work by declaring "visitors" which get called when a particular node type is visited, and may apply transformations.
+
+Presets are just collections of plugins.
+
+#### Visiting order
+
+According to [Plugin Ordering](https://babeljs.io/docs/plugins/#plugin-ordering), Babel loads plugins in the order declared, then (plugins from) presets in reverse order:
+
+```js
+module.exports = {
+  plugins: [1, 2, 3],
+  presets: [5, 4],
+};
+```
+
+However, it ***may appear*** to do the opposite!
+
+Babel traverses the tree of nodes top to bottom, so if plugin 5 visits a higher level node, that node (and its children) may be transformed by the time plugin 1 gets to visit a deeper node.
+
+##### Example
+
+Suppose we have the following `babel.config.cjs` file:
+
+```js
+module.exports = {
+  plugins: ["babel-plugin-wallace", "@babel/plugin-syntax-jsx"],
+};
+```
+
+This as our `babel-plugin-wallace`:
+
+```js
+module.exports = () => {
+  return {
+    visitor: {
+      JSXElement(path) {
+        console.log(path.parent.type);
+      },
+    },
+  };
+};
+```
+
+And this is the source code:
+
+```jsx
+const Foo = ({name}) => (
+  <div>
+    <p>{name}</p>
+  </div>
+)
+```
+
+The console will log `ArrowFunctionExpression` because that is indeed the parent node's type.
+
+However if we add the `@babel/preset-env` preset to our config:
+
+```js
+module.exports = {
+  plugins: ["babel-plugin-wallace", "@babel/plugin-syntax-jsx"],
+  presets: ["@babel/preset-env"],
+};
+```
+
+Then the console logs `ReturnStatement` which probably breaks our plugin, and makes us doubt whether Babel really applies plugins before presets.
+
+However the explanation is logical.  Babel visits the `ArrowFunctionExpression` before visiting its child nodes, such as the `JSXElement`. The `@babel/preset-env` transforms the `ArrowFunctionExpression` into this:
+
+```jsx
+var Foo = function Foo(_ref) {
+  var name = _ref.name;
+  return <div>
+    <p>{name}</p>
+  </div>;
+};
+```
+
+During the transformation the `JSXElement` node got moved into a `ReturnStatement`. Babel continues walking the (freshly modified) tree, and eventually reaches the `JSXElement`, calling the visitor in `babel-plugin-wallace` which detects its parent as the `ReturnStatement`.
+
+One way to get around this would be for `babel-plugin-wallace` to declare a `ArrowFunctionExpression` visitor, which as per ordering rules, will be called before `@babel/preset-env` does:
+
+```js
+module.exports = () => {
+  return {
+    visitor: {
+      ArrowFunctionExpression(path) {
+        // do stuff before @babel/preset-env
+      },
+    },
+  };
+};
+```
+
+The node can be passed to another visitor. See https://github.com/babel/babel/issues/12976
+
+See mixed mode below.
+
+#### Building new code
+
+You create new nodes using `t` like so:
+
+```js
+path.replaceWith(
+  t.expressionStatement(t.stringLiteral("Is this the real life?"))  
+);
+```
+
+All the types are defined [here](https://github.com/babel/babel/blob/master/packages/babel-types/src/definitions/core.js).
+
+#### State
+
+Avoid global state at all costs. Also not that state errors may not be apparent until you use a tool such as webpack which loads the plugin and calls it repeatedly.
+
+You can pass it in as state to the `traverse()` method and have access to it on `this` in the visitor.
+
+```
+const visitorOne = {
+  Identifier(path) {
+    if (path.node.name === this.exampleState) {
+      // ...
+    }
+  }
+};
+
+const MyVisitor = {
+  FunctionDeclaration(path) {
+    var exampleState = path.node.params[0].name;
+    path.traverse(visitorOne, { exampleState });
+  }
+};
+```
+
+### Examples
+
+https://github.com/babel/babel/tree/main/packages
+
+### Considerations
+
+#### Mixed mode
+
+The plugin must work whether `@babel/preset-env` is set or not, meaning we cannot rely on those transformations happening, which is unfortunate as it would simplify things like props destructuring.
 
 ## Tests
 
@@ -395,6 +567,8 @@ This allows us to do things which aren't possible using any of the above methods
 
 ## Performance
 
+### Benchmarks
+
 We measure performance by running [js-framework-benchmark](https://github.com/krausest/js-framework-benchmark) locally. 
 
 Compare the performance of your changes by:
@@ -411,11 +585,14 @@ Note that you need at least 10 runs, and that you must run them at the same time
 
 We need a way to formalise this.
 
-#### Size
+### Bundle size
 
-Size matters. New changes should not add too much to the bundle.
+We aim to keep the base bundle size of `wallace` to a minimum by:
 
-You can obtain the real size with: 
+* Enabling tree shaking.
+* Avoiding ES6 constructs that add mounds of extra code when transpiled, such as classes.
+
+You can obtain the real size of a bundle in a project with: 
 
 ```sh
 du -b dist/bundle.js
@@ -438,18 +615,22 @@ It is far easier to retain an item in the DOM and mark it hidden than to repeate
 
 ### Repeat
 
-Repeat behaviour uses "pool".
+Repeat behaviour uses "pools" - see relevant code.
 
 ### Stubs
 
 A stub is just a component definition assigned to a prototype field.
 
-## Releases
+## Publishing
 
-We use [lerna](https://lerna.js.org/) to version and publish:
+We use [lerna](https://lerna.js.org/) to version and publish with the following command:
 
 ```
-lerna publish --no-private
+lerna publish --no-private --force-publish
 ```
 
-Does this prompt for a version number and add a tag? TODO: find out.
+From the docs:
+
+> Lerna detects the current packages, identifies the current version and proposes the next one to choose. Once a given version is chosen, Lerna updates the `package.json` with the version number, commits the change, adds a corresponding version tag (e.g. `v1.0.0`) and pushes the commit and the tag to the remote repository.
+
+The  `--force-publish` flag will force Lerna to always version all packages, regardless of if they have changed since the previous release.
