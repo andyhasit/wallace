@@ -1,6 +1,6 @@
 {
   "name": "wallace",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "author": "Andrew Buchan",
   "description": "The framework that brings you glee.",
   "license": "ISC",
@@ -15,7 +15,7 @@
     "rebuild-plugin": "cd ../babel-plugin-wallace && npx tsc"
   },
   "dependencies": {
-    "babel-plugin-wallace": "^0.0.2",
+    "babel-plugin-wallace": "^0.0.3",
     "browserify": "^17.0.1"
   }
 }
