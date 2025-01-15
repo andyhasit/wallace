@@ -32,9 +32,6 @@ export function getElement(elementOrId) {
 export function createComponent(cls, parent, props) {
   const component = buildComponent(cls, parent);
   component.props = props;
-  // Raise a dev warning here that if init isn't available, the class maybe doesn't
-  // inherit from Component.
-  component.init();
   component.update();
   return component;
 }
@@ -45,8 +42,8 @@ export function createComponent(cls, parent, props) {
 export function buildComponent(cls, parent) {
   const component = new cls(parent);
   const prototype = cls.prototype;
-  const dom = prototype.__cn.cloneNode(true);
+  const dom = prototype._n.cloneNode(true);
   component.el = dom;
-  component.__bv(component, dom);
+  component._b(component, dom);
   return component;
 }

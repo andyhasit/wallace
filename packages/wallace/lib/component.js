@@ -9,32 +9,15 @@ export function Component(parent) {
   this.el = null; // the element - will be set during build
   this.ref = {}; // user set references to elements or components
   // Internal state objects
-  this._mo = []; // store misc objects like pools.
-  this.__stash = {}; // stash of refs, mostly elements, but also pools.
-  this.__ov = {}; // The old values for watches to compare against
+  this._o = []; // stashed objects like pools.
+  this._e = {}; // stashed elements.
+  this._p = {}; // The previous values for watches to compare against
 }
 
 var proto = Component.prototype;
 
 proto.onUpdate = noop;
 proto.afterUpdate = noop;
-proto.onInit = noop;
-proto.afterInit = noop;
-
-/**
- * Gets called once immediately after building.
- * TODO: do we need or even want this?
- */
-proto.init = function () {
-  this.onInit();
-  // for (let key in this.__stash) {
-  //   const e = this.__stash[key];
-  //   if (e instanceof Component) {
-  //     e.init();
-  //   }
-  // }
-  this.afterInit();
-};
 
 Object.defineProperty(proto, "hidden", {
   set: function (value) {
@@ -71,13 +54,13 @@ proto.updateSelf = function () {
     shouldBeVisible;
 
   const watches = this.__wc;
-  const lookup = this.__lu;
+  const lookup = this._l;
   const props = this.props;
   lookup.reset();
   const il = watches.length;
   while (i < il) {
     watch = watches[i];
-    element = this.__stash[watch.wk];
+    element = this._e[watch.wk];
     shieldQuery = watch.sq;
     i++;
     shouldBeVisible = true;
@@ -92,53 +75,3 @@ proto.updateSelf = function () {
     }
   }
 };
-
-/**
- * Is Attached.
- * Determines whether this component is attached to the DOM.
- */
-proto.__ia = function () {
-  let e = this.el;
-  while (e) {
-    if (e === document) {
-      return true;
-    }
-    e = e.parentNode;
-  }
-  return false;
-};
-
-// const trackedComponents = [];
-
-/**
- * The global mount tracker.
- */
-// proto.__mt = mountie;
-
-// function trackMounting(component) {
-//   trackedComponents.push({
-//     component: component,
-//     isAttached: component.__ia(),
-//   });
-// }
-
-// function flushMounting() {
-//   for (let i = 0, il = trackedComponents.length; i < il; i++) {
-//     let trackedComponent = trackedComponents[i];
-//     let component = trackedComponent.component;
-//     let attachedNow = component.__ia();
-//     if (attachedNow !== trackedComponent.isAttached) {
-//       let fn = attachedNow ? component.mount : component.unmount;
-//       fn.apply(component);
-//       trackedComponent.isAttached = attachedNow;
-//     }
-//   }
-// }
-
-/**
- * Call this if you want to get mount() and unmount() callbacks.
- * TODO: fix this. Do we want init or onMount?
- */
-// proto.trackMounting = function () {
-//   this.__mt.track(this);
-// };

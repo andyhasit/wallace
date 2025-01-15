@@ -29,7 +29,7 @@ export enum EVENT_CALLBACK_VARIABLES {
 }
 
 export enum SPECIAL_SYMBOLS {
-  objectStash = "_mo",
+  objectStash = "_o",
   alwaysUpdate = "*",
   patch = "patch",
 }

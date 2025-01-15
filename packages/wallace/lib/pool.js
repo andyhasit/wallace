@@ -109,7 +109,6 @@ proto.patch = function (e, items, parent) {
 
 /**
  * Pools same type components, retrieving by sequence.
- * Must not be shared.
  *
  * @param {class} componentClass - The class of Component to create.
  */
@@ -154,44 +153,3 @@ SequentialPool.prototype.patch = function (e, items, parent) {
   this._c = itemsLength;
   trimChildren(e, childNodes, itemsLength);
 };
-
-// Only used for swap...
-
-/**
- * An object which creates and pools components according to the mappings provided.
- * If there is no match in the mappings, the fallback function is called.
- *
- * Note that the fallback must return an instance (of Component or Wrapper) whereas
- * mappings must specify component classes.
- *
- * You can rely solely on the fallback if you like.
- *
- * @param {Object} mappings - a mapping of format key->componentClass
- * @param {function} fallback - a function to call when no key is provided.
- *
- */
-// export function InstancePool(mappings, fallback) {
-//   this._m = mappings;
-//   this._f = fallback;
-//   this._i = {}; // Instances
-// }
-
-// InstancePool.prototype.getOne = function (key, parentComponent) {
-//   if (!this._i.hasOwnProperty(key)) {
-//     this._i[key] = this._m.hasOwnProperty(key)
-//       ? parentComponent.nest(this._m[key])
-//       : this._f(key, parentComponent);
-//   }
-//   return this._i[key];
-// };
-
-// export function Repeater(element, component, pool) {
-//   this.el = element;
-//   this.c = component;
-//   this.p = pool;
-// }
-
-// Repeater.prototype.set = function (items) {
-//   this.c = component;
-//   this.p.patch(this.el, items, this.c);
-// };

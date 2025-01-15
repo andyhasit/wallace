@@ -166,7 +166,6 @@ function renameVariablesInExpression(
 ): Expression {
   // Clone the original expression to avoid modifying it
   const clonedExpression = cloneNode(originalExpression);
-  console.log(originalExpression);
 
   // Function to replace identifiers based on the mapping
   function replaceIdentifiers(node) {
@@ -393,8 +392,8 @@ function processNodes(
       // specifically inside the buildComponent scope.
       const eventVariableMapping: { [key: string]: string } = {
         [component.componentIdentifier.name]: COMPONENT_BUILD_PARAMS.component,
-        [component.propsIdentifier
-          .name]: `${COMPONENT_BUILD_PARAMS.component}.props`,
+        [component.propsIdentifier.name]:
+          `${COMPONENT_BUILD_PARAMS.component}.props`,
         [EVENT_CALLBACK_VARIABLES.element]: `${EVENT_CALLBACK_VARIABLES.event}.target`,
       };
       node.eventListeners.forEach((listener) => {

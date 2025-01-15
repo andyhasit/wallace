@@ -24,7 +24,6 @@ export const nestComponent = (rootElement, path, cls, parent) => {
   const el = findElement(rootElement, path),
     child = buildComponent(cls, parent);
   replaceNode(el, child.el);
-  child.init();
   return child;
 };
 
@@ -40,7 +39,7 @@ export const saveRef = (element, component, name) => {
  * Saves a misc object (anything that's not an element). Can be used to wrap a stash call.
  */
 export const saveMiscObject = (element, component, object) => {
-  component._mo.push(object);
+  component._o.push(object);
   return element;
 };
 
@@ -90,9 +89,9 @@ export function extendComponent(
     sc: arr[3], // The number of items to shield
     cb: arr[4], // The callbacks - object
   }));
-  prototype.__lu = new Lookup(lookups);
-  prototype.__bv = buildFunction;
-  prototype.__cn = makeEl(html);
+  prototype._l = new Lookup(lookups);
+  prototype._b = buildFunction;
+  prototype._n = makeEl(html);
 }
 
 export function extendPrototype(base, prototypeExtras) {
@@ -108,46 +107,4 @@ export function extendPrototype(base, prototypeExtras) {
   });
   Object.assign(Constructor.prototype, prototypeExtras);
   return Constructor;
-}
-
-/**
- 
-RETHINK THESE...
-
- * Move the component to new parent. Necessary if sharing a pool.
-
-export const moveComponent = (component, newParent) => {
-  throw new Error("Not implemented.");
-  // if (component.parent && component.parent.__nc) {
-  //   const nv = component.parent.__nc;
-  //   nv.splice(nv.indexOf(component), 1);
-  // }
-  // component.parent = newParent;
-};
-
-export const nest = function (cls, props) {
-  const child = createComponent(cls, this, props || this.props);
-  this.__nc.push(child);
-  return child;
-};
-
-
- */
-
-/**
- * Calls a function somewhere up the parent tree.
- */
-export function bubble(component, name) {
-  let target = component.parent;
-  while (target) {
-    let func = target[name];
-    if (func) {
-      // We don't really care about performance here, so accessing arguments is fine.
-      // TODO: maybe we do care, so pass as array?
-      // Use proxy?
-      return func.apply(target, Array.prototype.slice.call(arguments, 1));
-    }
-    target = target.parent;
-  }
-  throw new Error("Bubble popped.");
 }

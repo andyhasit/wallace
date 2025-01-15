@@ -23,12 +23,12 @@ Lookup.prototype = {
     if (run[key] === undefined) {
       // Verbose but efficient way as it avoids lookups?
       // Or is this harmful to performance because we're just reading values more than calling functions?
-      let o = component.__ov[key];
+      let o = component._p[key];
       // TODO: is this checking for watchOnce?
       o = o === undefined ? "" : o;
       const n = this.callbacks[key](props, component);
       const c = n !== o;
-      component.__ov[key] = n;
+      component._p[key] = n;
       const rtn = { n, o, c };
       run[key] = rtn;
       return rtn;

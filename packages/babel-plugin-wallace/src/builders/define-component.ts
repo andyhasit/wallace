@@ -82,7 +82,7 @@ function buildLookupsArg(
 
 /**
  * 
-    component.__stash = {
+    component._e = {
       1: findElement(rootElement, [0]),
       2: findElement(rootElement, [1, 1]),
     };
@@ -97,7 +97,7 @@ function buildComponentBuildFunction(
 
   const stashAssignment = t.assignmentExpression(
     "=",
-    t.memberExpression(t.identifier("component"), t.identifier("__stash")),
+    t.memberExpression(t.identifier("component"), t.identifier("_e")),
     stashValueObject,
   );
   const statements = [t.expressionStatement(stashAssignment)];
