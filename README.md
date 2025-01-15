@@ -8,25 +8,32 @@
 
 ## What is this?
 
-Wallace is a UI framework which you can use in place of React, Angular, Vue, Svelte, Solid and co.
+Wallace is a UI framework which you can use in place of React, Angular, Vue, Svelte, Solid etc. Here's why you might want to:
 
-Here are some reasons why you might want to:
-
-1. It is much **simpler** to use than any of those.
+1. Wallace is much **easier** to use than any of those.
 2. You end up with more **readable** and **reusable** code.
 3. You end up with **smaller** bundles and **faster** DOM updates.
 
-Lastly, you get all this without losing the **freedom** which virtually all frameworks deprive you of.
+Lastly, you get all this without losing the **freedom** which frameworks rob you of.
 
-The ten minute tour covers everything you need to get started, and explores these bold claims in more detail.
+## Guided tour
 
-## Ten minute tour
+The tour covers everything you need to get started, and explores the **bold** claims made above.
+
+This is not a tutorial, but if you want to play with some code, either:
+
+* Blitzstack in your browser.
+* npx create-app
+
+```sh
+npx create-wallace-app my-app
+```
 
 ### Components
 
 Wallace controls the DOM through a tree of nested components, each of which updates its own section of the DOM tree, then tells its nested components to do the same, and so on.
 
-Wallace only uses components, nothing else.
+There is no central engine, each component operates independently, and can be customised.
 
 ### Special JSX
 
@@ -45,12 +52,7 @@ const Task = ({ text, done }) => (
 mount("main", Task, { text: "Learn Wallace", done: false });
 ```
 
-This looks similar to React, except that with Wallace:
-
-1. Components are real objects (this matters later on).
-2. The JSX rules are very different.
-
-Rather than mangle your JSX with control structures:
+This looks similar to React, but Wallace uses JSX very differently. Rather than mangle your JSX with control structures:
 
 ```jsx
 // THIS IS NOT ALLOWED
@@ -63,7 +65,7 @@ const TaskList = (tasks) => (
 );
 ```
 
-Wallace uses special syntax constructs to achieve the same result:
+Wallace uses special tag formats and attributes to do its thing:
 
 ```tsx
 const TaskList = (tasks) => (
@@ -73,24 +75,72 @@ const TaskList = (tasks) => (
 );
 ```
 
-There are only two special syntax constructs:
+If you're coding along, you'll need to change the last line:
 
-1. Certain tags with a dot in the name do special things.
-2. Certain attributes (called "directives") do special things.
+```jsx
+mount("main", TaskList, [
+  { text: "Learn Wallace", done: false },
+  { text: "Star it on gtihub", done: false },
+]);
+```
 
-The first advantage of this system more compact JSX (expect ~50% the number of line compared to React) and the indentation stays true - both of which greatly improve readability.
+#### Special tags
 
-The second advantage is that you can do a whole lot more with this than you can with regular JSX.
+There are just three special tags. We've already seen `ComponentName.repeat` and here's its counterpart to nest a single component:
 
-(copy examples from manifesto)
+```jsx
+const TaskList = (tasks) => (
+  <div>
+    <Task.nest props={tasks[0]} />
+    <Task.nest props={tasks[1]} />
+  </div>
+);
+```
 
+Both use the `props` directive, but `.nest` expects a single object, whereas `.repeat` expects an array. If you're using TypeScript (see below) your IDE will warn you if you send invalid props.
 
+The third special tag is for stubs, which let you reuse and extend components:
 
-#### 
+```jsx
+const BaseDialog = (tasks) => (
+  <div>
+    <h3>{title}</h3>
+    <stub:content />
+    <stub:buttons />
+  </div>
+);
+
+const MyDialog = extendComponent(BaseDialog)
+MyDialog.prototype.content = TaskList
+MyDialog.prototype.buttons = () => (
+  <div>
+    <button>OK</button>
+    <button>Cancel</button>
+  </div>
+);
+```
+
+#### Directives
+
+There are many directives, but you only need to remember one:
+
+```jsx
+const TaskList = () => (
+  <div help></div>
+);
+```
+
+This displays the in-browser help panel which lists all the available directives.
+
+Although slightly less flexible than regular JSX, it brings far more power to your fingertips.
+
+### Examples
 
 #### Reactive
 
 By default components are not reactive, because that's a really bad idea (link to article). However it is useful in some cases, such as forms.
+
+Show onChange set done = ! done and explain why that works. 
 
 Show bind.
 
@@ -104,19 +154,13 @@ Also mention static.
 
 This shows the wealth of functionality which is available.
 
-
-
-Directives do a variety of interesting things, but you only need to remember one:
-
-```jsx
-const TaskList = () => (
-  <div help></div>
-);
-```
-
-This displays the in-browser help panel which lists all the available directives.
+#### Debug
 
 Before we cover the advantages of this system, let's briefly look at how it works.
+
+### Typescript
+
+
 
 ### Compiler magic
 
@@ -124,13 +168,42 @@ Before we cover the advantages of this system, let's briefly look at how it work
 - more power and lighter bundles
 - mention the objects it creates
 
+##### 
 
+There are 2 reasons Why objects matter.
 
-----
+### Coordination
 
+With React you don't really have components, just stateless functions, and this makes it very difficult to coordinate updates and share state. You either need to pass callbacks in props, or use hooks, both of which are so awkward that its quite baffling that anyone uses these frameworks.
 
+Wallace has a very simple solution. In addition to props, you can also pass an object down the tree.
 
-This approach has several benefits:
+A controller is just an object (any object) which components will pass down to nested components, independently of props:
+
+```
+example
+```
+
+In order to be useful, a controller needs a reference to a component which it can update.
+
+Advantages:
+
+* So much simpler and cleaner.
+* Mostly non-framework code.
+
+### Freedom
+
+### Performance
+
+* Benchmark
+* Granular updates.
+* V8 engine rules
+* Pools
+* Memory leaks
+
+# ----------------
+
+##### This approach has several benefits:
 
 ##### Clearer code
 
