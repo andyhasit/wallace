@@ -19,37 +19,14 @@ declare module "wallace" {
   export interface Component {
     update(): void;
     setProps(props: any): void;
+    el: HTMLElement;
   }
 
-  /**
-   * Base class for extending components. If you jsut want a type see ComponentAny.
-   */
-  // export class Component<Type> {
-  //   constructor({ props, repeat }: { props?: Type; repeat?: Array<Type> });
-  //   update(): void;
-  //   watch(value?: any, callback?: Function): void;
-  //   nest?({ props, showIf }: { props?: Type; showIf?: boolean }): JSX.Element;
-  //   repeat?({
-  //     props,
-  //     showIf,
-  //   }: {
-  //     props: Array<Type>;
-  //     showIf?: boolean;
-  //   }): JSX.Element;
-  //   props: Type;
-  //   ref: { [key: string]: HTMLElement | Component<any> };
-  // }
-
-  // /**
-  //  * Shorthand type for Component<any>
-  //  */
-  // export type ComponentAny = Component<any>;
-
   // TODO: add more to this, maybe overload for each case.
-  export function mount(
+  export function mount<T>(
     element: string | HTMLElement,
-    component: Accepts<any>,
-    props?: any,
+    component: Accepts<T>,
+    props?: T,
   ): Component;
 
   export function extendPrototype<T>(
@@ -58,34 +35,13 @@ declare module "wallace" {
   ): Accepts<T>;
 }
 
-/**
- * These allow additional attributes, such as "ref:xyz" for
- * Function components and class components.
- *
- *   <div ref:xyz>
- */
+// TODO: beef these up.
 declare namespace JSX {
-  interface Element {
-    // repeat?: any;
-  }
-  interface IntrinsicElements {
-    // [elemName: string]: { props: any; repeat?: any };
-  }
-  interface ElementClass {
-    // [elemName: string]: any;
-    // repeat?: any;
-  }
-  interface IntrinsicAttributes {
-    // props?: any;
-    // [elemName: string]: any;
-    // [attName: string]: any;
-    // , attValue: any
-    // props?: Record<string, any>;
-  }
-  interface ElementAttributesProperty {
-    // props: {}; // Specify that `props` defines the component's properties
-    // "*";
-  }
+  interface Element {}
+  interface IntrinsicElements {}
+  interface ElementClass {}
+  interface IntrinsicAttributes {}
+  interface ElementAttributesProperty {}
 }
 
 // This is necessary for weird TypeScript reasons.
