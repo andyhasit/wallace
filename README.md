@@ -6,82 +6,324 @@
 
 [**github.com/andyhasit/wallace**](https://github.com/andyhasit/wallace)
 
-## What
+## What is this?
 
-Wallace is a UI framework you can (and hopefully will) use in place of React, Angular, Svelte, Vue, Solid etc.
+Wallace is a UI framework which you can use in place of React, Angular, Vue, Svelte, Solid and co.
 
-## Why
+Here are some reasons why you might want to:
 
-Compared to other frameworks, Wallace:
+1. It is much **simpler** to use than any of those.
+2. You end up with more **readable** and **reusable** code.
+3. You end up with **smaller** bundles and **faster** DOM updates.
 
-* Is much **simpler** to use (learn everything in ~25 min).
-* Produces **smaller** bundles.
-* Runs a lot **faster**.
-* Results in **cleaner** code.
-* Has more **powerful** architectural and optimisation capabilities.
+Lastly, you get all this without losing the **freedom** which virtually all frameworks deprive you of.
 
-But what makes Wallace unique is that you get all this without losing your **freedom**.
+The ten minute tour covers everything you need to get started, and explores these bold claims in more detail.
 
-Most frameworks don't let you interact with the DOM they control, or change the way they control it. You don't often need to do this, but if you do and you can't, then you're in real trouble.
+## Ten minute tour
 
-Wallace lets you do both those things. You can also do anything you could do in vanilla JS, but with added scaffolding to do it safely and easily. This means you will never, ever be cornered by the framework, and also able to match vanilla speeds if you need to.
+### Components
 
-Of course you may never need that, in which case you can just enjoy a **simpler**, **smaller**, **faster**, **cleaner** and more **powerful** tool to work with.
+Wallace controls the DOM through a tree of nested components, each of which updates its own section of the DOM tree, then tells its nested components to do the same, and so on.
 
-## Installation
+Wallace only uses components, nothing else.
 
-TODO: offer blitzstack, or create-app.
+### Special JSX
 
-#### Manual
+Components defined as functions which return JSX:
 
-Install `wallace` (which installs `babel-plugin-wallace` at the same version) and save to your dev dependencies:
-
-```sh
-npm i wallace --save-dev
-```
-
-Add this to your **babel.config.cjs** or equivalent:
-
-```js
-module.exports = {
-  plugins: ["babel-plugin-wallace", "@babel/plugin-syntax-jsx"],
-};
-```
-
-And add this to your **tsconfig.json** file if using TypeScript:
-
-```
-{
-  "compilerOptions": {
-    "jsx": "preserve",
-  },
-}
-```
-
-You'll also need a bundler like [Webpack](https://webpack.js.org/), [Parcel](https://parceljs.org/) or [Vite](https://vite.dev/). 
-
-## Quick tour
-
-You work in jsx/tsx files.
-
-Wallace was designed to bring you freedom. However, at first glance it looks like a cheap React clone with a lot less freedom :-| 
-
-You define components as functions which return JSX (so in a jsx/tsx file) just like React:
-
-```tsx
+```jsx
 import { mount } from "wallace";
 
 const Task = ({ text, done }) => (
   <div>
     <input type="checkbox" checked={done} />
-    <span style:color={done ? 'grey' : 'black'}>
-      {text}
-     </span>
+    <span>{text}</span>
   </div>
 );
 
 mount("main", Task, { text: "Learn Wallace", done: false });
 ```
+
+This looks similar to React, except that with Wallace:
+
+1. Components are real objects (this matters later on).
+2. The JSX rules are very different.
+
+Rather than mangle your JSX with control structures:
+
+```jsx
+// THIS IS NOT ALLOWED
+const TaskList = (tasks) => (
+  <div>
+    {tasks.map(({ text, done }) => (
+      <Task text={text} done={done} />
+    ))}
+  </div>
+);
+```
+
+Wallace uses special syntax constructs to achieve the same result:
+
+```tsx
+const TaskList = (tasks) => (
+  <div>
+    <Task.repeat props={tasks} />
+  </div>
+);
+```
+
+There are only two special syntax constructs:
+
+1. Certain tags with a dot in the name do special things.
+2. Certain attributes (called "directives") do special things.
+
+The first advantage of this system more compact JSX (expect ~50% the number of line compared to React) and the indentation stays true - both of which greatly improve readability.
+
+The second advantage is that you can do a whole lot more with this than you can with regular JSX.
+
+(copy examples from manifesto)
+
+
+
+#### 
+
+#### Reactive
+
+By default components are not reactive, because that's a really bad idea (link to article). However it is useful in some cases, such as forms.
+
+Show bind.
+
+#### Stubs
+
+Massively cleaner and more reusable code compared to React. 
+
+#### Class toggle
+
+Also mention static.
+
+This shows the wealth of functionality which is available.
+
+
+
+Directives do a variety of interesting things, but you only need to remember one:
+
+```jsx
+const TaskList = () => (
+  <div help></div>
+);
+```
+
+This displays the in-browser help panel which lists all the available directives.
+
+Before we cover the advantages of this system, let's briefly look at how it works.
+
+### Compiler magic
+
+- mention function rules
+- more power and lighter bundles
+- mention the objects it creates
+
+
+
+----
+
+
+
+This approach has several benefits:
+
+##### Clearer code
+
+The JSX is more compact, correctly indented and easier to read. This has several knock on effects for your code base.
+
+
+
+
+
+You lose a bit of flexibility, 
+
+
+
+As you can see, Wallace uses special conventions in JSX to 
+
+This may feel debilitating if you're used to dynamic JSX, but it turns out you can do a lot more with static JSX. Here is how you repeat nested components with Wallace:
+
+Instead,
+
+
+
+Except that Wallace doesn't *call* these functions, instead it *replaces* them with generated code at compilation. The function is really just a placeholder for JSX, and there are restrictions on what it can include.
+
+The function may 
+
+
+
+It's only purpose is to act as a placeholder for JSX
+
+neither a regular function, its just a placeholder 
+
+. The function is really just a placeholder for JSX which get replaced with generated code during compilation.
+
+, nor regular JSX
+
+
+
+
+
+
+
+ gets replaced with generated code during compilation.
+
+ will never execute, and the JSX 
+
+is not regular JSX . 
+
+these are not real functions, 
+
+
+
+they are just placeholders for JSX which get replaced with generated code during compilation.
+
+
+
+
+
+
+
+Wallace was designed to bring you freedom. However, at first glance it looks like a cheap React clone with a lot less freedom :-| 
+
+
+
+These functions won't exist at run time, will never be executed, and therefore can't contain any JavaScript, except for snippets inside JSX expressions which gets copied over to the generated code.
+
+Placeholder expressions may return values:
+
+```jsx
+<span>{done ? text : text.toUpperCase()}</span>
+```
+
+But may not return nested JSX:
+
+```jsx
+// THIS IS NOT ALLOWED
+const TaskList = (tasks) => (
+  <div>
+    {tasks.map(({ text, done }) => (
+      <Task text={text} done={done} />
+    ))}
+  </div>
+);
+```
+
+This may feel debilitating if you're used to dynamic JSX, but it turns out you can do a lot more with static JSX. Here is how you repeat nested components with Wallace:
+
+Instead, Wallace uses a very small number of special rules
+
+```tsx
+const TaskList = (tasks) => (
+  <div>
+    <Task.repeat props={tasks} />
+  </div>
+);
+```
+
+As you can see, Wallace uses special conventions in JSX to 
+
+
+
+
+
+Think of the JSX as a TypeScript-friendly HTML string which has access to props.
+
+This doesn't feel like freedom at all, but as it turns out, these restrictions open more doors than they close. We'll get to that, but first let's see how Wallace handles repeat syntax:
+
+```tsx
+const TaskList = (tasks) => (
+  <div>
+    <Task.repeat props={tasks} />
+  </div>
+);
+```
+
+Wallace uses special tag conventions plus attributes (called directives) to do its thing - leaving your JSX clean, compact and correctly indented.
+
+
+
+However these functions are never executed. Instead they are parsed and replaced with generated code during compilation. They are essentially just placeholders for JSX, whose overall structure must be static. 
+
+
+
+This means you can't do things you normally do with JSX, like this:
+
+```jsx
+const TaskList = (tasks) => (
+  <div>
+    {tasks.map(({ text, done }) => (
+      <Task text={text} done={done} />
+    ))}
+  </div>
+);
+```
+
+
+
+
+
+
+
+The functions may only contain JSX
+
+
+
+, so no conditionals or loops. You can't place any JavaScript before or around JSX elements - only inside expressions, as long as that doesn't return JSX.
+
+So this is allowed:
+
+```jsx
+<span>{done ? text : text.toUpperCase()}</span>
+```
+
+This is not allowed:
+
+```jsx
+<div>
+  {done ? (
+    <span>{text}</span>
+  ) : (
+    <span>{text.toUpperCase()}</span>
+  )}
+</div>;
+
+const TaskList = (tasks) => (
+  <div>
+    {tasks.map(({ text, done }) => (
+      <Task text={text} done={done} />
+    ))}
+  </div>
+);
+```
+
+
+
+
+
+The function is just a scoped placeholder for static JSX 
+
+You are only allowed static JSX not allowed any code inside the function, except inside expressions.
+
+This means you can't put any JavaScript before or around JSX elements:
+
+```jsx
+<div>
+  {checked ? <span></span> : <span></span>}
+</div>
+```
+
+
+
+
+
+
 
 But other than the enclosing function, you're not allowed any JavaScript *around* JSX elements, so no conditionals or loops:
 
@@ -257,3 +499,66 @@ Then talk about controllers.
 
 
 ### OOP
+
+
+
+
+
+
+
+But what makes Wallace unique is that you get all this without losing your **freedom**.
+
+Most frameworks don't let you interact with the DOM they control, or change the way they control it. You don't often need to do this, but if you do and you can't, then you're in real trouble.
+
+Wallace lets you do both those things. You can also do anything you could do in vanilla JS, but with added scaffolding to do it safely and easily. This means you will never, ever be cornered by the framework, and also able to match vanilla speeds if you need to.
+
+Of course you may never need that, in which case you can just enjoy a **simpler**, **smaller**, **faster**, **cleaner** and more **powerful** tool to work with.
+
+
+
+
+
+## Installation
+
+TODO: offer blitzstack, or create-app.
+
+#### Manual
+
+Install `wallace` (which installs `babel-plugin-wallace` at the same version) and save to your dev dependencies:
+
+```sh
+npm i wallace --save-dev
+```
+
+Add this to your **babel.config.cjs** or equivalent:
+
+```js
+module.exports = {
+  plugins: ["babel-plugin-wallace", "@babel/plugin-syntax-jsx"],
+};
+```
+
+And add this to your **tsconfig.json** file if using TypeScript:
+
+```
+{
+  "compilerOptions": {
+    "jsx": "preserve",
+  },
+}
+```
+
+You'll also need a bundler like [Webpack](https://webpack.js.org/), [Parcel](https://parceljs.org/) or [Vite](https://vite.dev/). 
+
+```tsx
+
+const Task = ({ text, done }) => (
+  <div>
+    <input type="checkbox" checked={done} />
+    <span style:color={done ? 'grey' : 'black'}>
+      {text}
+     </span>
+  </div>
+);
+```
+
