@@ -17,5 +17,6 @@
   "dependencies": {
     "babel-plugin-wallace": "^0.0.3",
     "browserify": "^17.0.1"
-  }
+  },
+  "gitHead": "29e0ea29260f14b2ac4934f3fd63da7ff9144a28"
 }

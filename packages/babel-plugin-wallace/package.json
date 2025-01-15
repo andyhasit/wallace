@@ -21,5 +21,6 @@
     "babylon": "^6.18.0",
     "source-map-support": "^0.5.21",
     "typescript": "^5.6.3"
-  }
+  },
+  "gitHead": "29e0ea29260f14b2ac4934f3fd63da7ff9144a28"
 }
