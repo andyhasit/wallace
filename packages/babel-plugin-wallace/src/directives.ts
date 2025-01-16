@@ -12,6 +12,42 @@ class BaseDirective extends Directive {
   }
 }
 
+// bind: {
+//   help: `
+//   Binds an event listener to an element:
+
+//   /h <div bind:keyup="p.count"></div>
+//   `,
+//   allow: "expr",
+//   qualifier: "yes",
+//   handle: function (nodeData, attInfo) {
+//   const event = attInfo.qualifier;
+//   let [watch, transform] = attInfo.args;
+//   nodeData.addWatch(watch, undefined, "value");
+//   transform = transform ? transform : "w.getValue()";
+//   nodeData.addEventListener(event, `${watch} = ${transform}`);
+//   },
+// },
+
+class BindDirective extends Directive {
+  static attributeName = "bind";
+  static help = `
+    Binds an event listener to an element:
+    
+    Defaults to onChange:
+
+    /h <div bind={p.count}></div>
+
+    Alternatively specify the event:
+
+    /h <div bind:keyup={p.count}></div>
+  `;
+  apply(node: TagNode, value: NodeValue, qualifier: Qualifier, base: string) {
+    const eventName = qualifier || "change";
+    node.addBindInstruction(eventName, value.expression);
+  }
+}
+
 class HelpDirective extends Directive {
   static attributeName = "help";
   static help = `
@@ -96,6 +132,7 @@ class ShowDirective extends Directive {
 
 export const builtinDirectives = [
   BaseDirective,
+  BindDirective,
   HelpDirective,
   HideDirective,
   OnEventDirective,

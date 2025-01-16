@@ -29,6 +29,8 @@ declare module "wallace" {
     props?: T,
   ): Component;
 
+  export function createProxy<T>(obj: T, component: Component): T;
+
   export function extendPrototype<T>(
     base: Accepts<T>,
     extras?: { [key: string]: any },

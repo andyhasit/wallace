@@ -32,6 +32,11 @@ interface EventListener {
   callback: Expression;
 }
 
+interface BindInstruction {
+  eventName: string;
+  expression: Expression;
+}
+
 interface ConditionalDisplay {
   expression: Expression;
   reverse: boolean;
@@ -50,6 +55,7 @@ export class ExtractedNode {
   parent: TagNode;
   watches: Watch[] = [];
   eventListeners: EventListener[] = [];
+  bindInstructions: BindInstruction[] = [];
   isNestedClass: boolean = false;
   repeatExpression: Expression | undefined;
   poolExpression: Expression | undefined;
@@ -76,6 +82,12 @@ export class ExtractedNode {
       error(this.path, ERROR_MESSAGES.NO_ATTRIBUTES_ON_NESTED_CLASS);
     }
     this.eventListeners.push({ eventName, callback });
+  }
+  addBindInstruction(eventName: string, expression: Expression) {
+    if (this.isNestedClass) {
+      error(this.path, ERROR_MESSAGES.NO_ATTRIBUTES_ON_NESTED_CLASS);
+    }
+    this.bindInstructions.push({ eventName, expression });
   }
   watchAttribute(attName: string, expression: Expression) {
     if (this.isNestedClass) {

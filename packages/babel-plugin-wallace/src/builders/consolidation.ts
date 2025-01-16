@@ -236,6 +236,7 @@ function processNodes(
     const repeatInstruction = node.getRepeatInstruction();
     const createWatch =
       node.watches.length > 0 ||
+      node.bindInstructions.length > 0 ||
       shieldInfo ||
       node.isNestedClass ||
       stubName ||
@@ -252,6 +253,38 @@ function processNodes(
             nestedComponentCls,
           )
         : componentDefinition.saveElementToStash(node.address);
+
+      // TODO: change this to work during consolidation as we need to read the type
+      // of input (checkbox use checked, not value)
+      // node.watchAttribute("value", value.expression);
+      // `${watch} = ${transform}`);
+
+      //   let [watch, transform] = attInfo.args;
+      //   nodeData.addWatch(watch, undefined, "value");
+      //   transform = transform ? transform : "w.getValue()";
+      //   nodeData.addEventListener(event, `${watch} = ${transform}`);
+
+      if (node.bindInstructions.length) {
+        if (node.tagName.toLowerCase() == "input") {
+          // @ts-ignore
+          const inputType = node.element.type.toLowerCase();
+          const attribute = inputType === "checkbox" ? "checked" : "value";
+          node.bindInstructions.forEach(({ eventName, expression }) => {
+            node.watchAttribute(attribute, expression);
+            const callback = t.assignmentExpression(
+              "=",
+              expression as Identifier,
+              t.memberExpression(
+                t.identifier(EVENT_CALLBACK_VARIABLES.element),
+                t.identifier(attribute),
+              ),
+            );
+            node.addEventListener(eventName, callback);
+          });
+        } else {
+          error(node.path, ERROR_MESSAGES.BIND_ONLY_ALLOWED_ON_INPUT);
+        }
+      }
 
       if (createWatch) {
         const _callbacks: { [key: string]: Array<Statement> } = {};
@@ -332,7 +365,6 @@ function processNodes(
             IMPORTABLES.saveMiscObject,
             [identifier(COMPONENT_BUILD_PARAMS.component), poolInstance],
           );
-          // pool.patch(element, items, component);
           addCallbackStatement(SPECIAL_SYMBOLS.alwaysUpdate, [
             expressionStatement(
               callExpression(
