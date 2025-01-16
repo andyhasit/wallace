@@ -623,7 +623,15 @@ A stub is just a component definition assigned to a prototype field.
 
 ## Publishing
 
-We use [lerna](https://lerna.js.org/) to version and publish with the following command:
+We use [lerna](https://lerna.js.org/) to version and publish, which leave a mess if the command doesn't complete, so first make sure you are logged in:
+
+```
+npm login
+```
+
+And that the prepack scripts run. (TODO: how to check)
+
+The publish with with the following command:
 
 ```
 lerna publish --no-private --force-publish
