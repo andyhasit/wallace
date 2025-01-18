@@ -22,8 +22,13 @@ The tour covers everything you need to get started, and explores the **bold** cl
 
 This is not a tutorial, but if you want to play with some code, either:
 
-* Blitzstack in your browser.
-* npx create-app
+##### Try it in your browser
+
+Just for the [typsecript](https://stackblitz.com/edit/wallace-0-0-5-ts) or es6 demo at StackBlitz.com
+
+##### Work locally
+
+Just run this to create a project called `my-app` or whatever you like:
 
 ```sh
 npx create-wallace-app my-app
@@ -31,13 +36,18 @@ npx create-wallace-app my-app
 
 ### Components
 
-Wallace controls the DOM through a tree of nested components, each of which updates its own section of the DOM tree, then tells its nested components to do the same, and so on.
+Wallace controls the DOM through a tree of components, each of which updates its own section of the DOM tree, then tells its nested components to do the same, all the way down.
 
-There is no central engine, each component operates independently, and can be customised.
+This is similar to React, except:
+
+1. Components are real objects, not functions.
+2. There is no central engine, only components, whose operation can by customised at will.
+
+We'll come back to why these matter once we've covered some basics.
 
 ### Special JSX
 
-Components defined as functions which return JSX:
+Components are defined as functions which return JSX:
 
 ```jsx
 import { mount } from "wallace";
@@ -52,10 +62,15 @@ const Task = ({ text, done }) => (
 mount("main", Task, { text: "Learn Wallace", done: false });
 ```
 
-This looks similar to React, but Wallace uses JSX very differently. Rather than mangle your JSX with control structures:
+Again this looks similar to React, except:
+
+1. These functions are never executed. They are replaced with generated code at compilation.
+2. The JSX follows very different rules.
+
+For example, to repeat a nested component in React, you'd have to write something like this, which throws the readability of XML out of the window:
 
 ```jsx
-// THIS IS NOT ALLOWED
+// React code. Won't work with Wallace!
 const TaskList = (tasks) => (
   <div>
     {tasks.map(({ text, done }) => (
@@ -65,7 +80,7 @@ const TaskList = (tasks) => (
 );
 ```
 
-Wallace uses special tag formats and attributes to do its thing:
+Wallace uses **special tag formats** and **special attributes** to do its thing:
 
 ```tsx
 const TaskList = (tasks) => (
@@ -75,52 +90,42 @@ const TaskList = (tasks) => (
 );
 ```
 
-If you're coding along, you'll need to change the last line:
-
-```jsx
-mount("main", TaskList, [
-  { text: "Learn Wallace", done: false },
-  { text: "Star it on gtihub", done: false },
-]);
-```
+This preserves the indentation ....
 
 #### Special tags
 
-There are just three special tags. We've already seen `ComponentName.repeat` and here's its counterpart to nest a single component:
+There are just two special tag formats. The first is that placing `.nest` or `.repeat` after a component name does what you expect:
 
 ```jsx
 const TaskList = (tasks) => (
   <div>
     <Task.nest props={tasks[0]} />
-    <Task.nest props={tasks[1]} />
+    <Task.repeat props={tasks.slice(1)} />
   </div>
 );
 ```
 
-Both use the `props` directive, but `.nest` expects a single object, whereas `.repeat` expects an array. If you're using TypeScript (see below) your IDE will warn you if you send invalid props.
+Note that `props` expects different data structure depending on whether you're nesting a single component or multiple.
 
-The third special tag is for stubs, which let you reuse and extend components:
+The other special tag format is for stubs, which we'll see in just a second.
+
+#### Special attributes
+
+Called directives, these can affect the element:
 
 ```jsx
-const BaseDialog = (tasks) => (
-  <div>
-    <h3>{title}</h3>
-    <stub:content />
-    <stub:buttons />
-  </div>
-);
-
-const MyDialog = extendComponent(BaseDialog)
-MyDialog.prototype.content = TaskList
-MyDialog.prototype.buttons = () => (
-  <div>
-    <button>OK</button>
-    <button>Cancel</button>
-  </div>
-);
+<span hidden={done}>hurry up</span>
+<button onClick={btnClick(text, e)}>submit</button>
+<input bind:keyup={text} />
 ```
 
-#### Directives
+Or the component overall:
+
+```jsx
+<div base="TaskList"></div>
+```
+
+
 
 There are many directives, but you only need to remember one:
 
@@ -130,11 +135,80 @@ const TaskList = () => (
 );
 ```
 
-This displays the in-browser help panel which lists all the available directives.
+This displays the offline help system in your browser.
+
+### TypeScript
+
+This works perfectly with TypeScript, but you need to specify the type which the component accepts using the special `Accepts` type:
+
+```tsx
+import { mount, Accepts } from "wallace";
+
+interface iTask {
+  text: string;
+  done: boolean;
+}
+
+const Task: Accepts<iTask> = ({ text, done }) => (
+  <div>
+    <input type="checkbox" checked={done} />
+    <span>{text}</span>
+  </div>
+);
+
+const TaskList: Accepts<iTask[]>  = (tasks) => (
+  <div>
+    <Task.repeat props={tasks} />
+  </div>
+);
+
+mount("main", TaskList, [
+  { text: "Learn Wallace", done: false },
+  { text: "Star it on gtihub", done: false },
+]);
+```
+
+Note how you don't need to repeat the type in the parameter.
+
+
+
+
 
 Although slightly less flexible than regular JSX, it brings far more power to your fingertips.
 
 ### Examples
+
+#### Class toggle
+
+We often want to toggle a single CSS class without changing the permanent class list. Wallace has a directive which does just this.
+
+```jsx
+<button class="btn btn-large" toggle:danger={props.isDangerous}>
+  Accept
+</button>
+```
+
+ In this example `danger` is the actual name of the CSS class, which is great if you're only toggling one class. If you want to toggle multiple classes, then you can group them using `class:<group-name>` which changes the behaviour of toggle:
+
+```jsx
+<button
+  class="btn btn-large"
+  class:danger="danger flashing"
+  class:promo="promotion"
+  toggle:danger={props.isDangerous}
+  toggle:promo={props.isPromotion}
+>
+  Accept
+</button>;
+```
+
+This also allows you to toggle multiple group of classes based on different variables.
+
+
+
+Also mention static.
+
+This shows the wealth of functionality which is available.
 
 #### Reactive
 
@@ -148,15 +222,9 @@ Show bind.
 
 Massively cleaner and more reusable code compared to React. 
 
-#### Class toggle
 
-Also mention static.
-
-This shows the wealth of functionality which is available.
 
 #### Debug
-
-Before we cover the advantages of this system, let's briefly look at how it works.
 
 ### Typescript
 
@@ -174,17 +242,25 @@ There are 2 reasons Why objects matter.
 
 ### Coordination
 
+* setProps
+
+
+
+
+
+---------
+
+
+
 With React you don't really have components, just stateless functions, and this makes it very difficult to coordinate updates and share state. You either need to pass callbacks in props, or use hooks, both of which are so awkward that its quite baffling that anyone uses these frameworks.
 
-Wallace has a very simple solution. In addition to props, you can also pass an object down the tree.
 
-A controller is just an object (any object) which components will pass down to nested components, independently of props:
 
-```
-example
-```
 
-In order to be useful, a controller needs a reference to a component which it can update.
+
+
+
+
 
 Advantages:
 
@@ -240,6 +316,25 @@ neither a regular function, its just a placeholder
 , nor regular JSX
 
 
+
+```jsx
+const BaseDialog = (tasks) => (
+  <div>
+    <h3>{title}</h3>
+    <stub:content />
+    <stub:buttons />
+  </div>
+);
+
+const MyDialog = extendComponent(BaseDialog)
+MyDialog.prototype.content = TaskList
+MyDialog.prototype.buttons = () => (
+  <div>
+    <button>OK</button>
+    <button>Cancel</button>
+  </div>
+);
+```
 
 
 

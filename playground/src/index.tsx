@@ -17,3 +17,10 @@ ClickCounter.prototype.click = function (counter: Counter) {
 };
 
 mount("main", ClickCounter, { clicks: 0 });
+<button
+  class="btn btn-large"
+  class:danger="danger flashing"
+  toggle:danger={props.isDangerous}
+>
+  Accept
+</button>;
