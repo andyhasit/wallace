@@ -12,7 +12,7 @@ const ClickCounter: Accepts<Counter> = (counter) => (
     <span>Clicked {counter.clicks} times</span>
 
     <input bind:keyup={counter.text} type="text"></input>
-    <input checked={counter.checked} type="checkbox"></input>
+    <input bind={counter.checked} type="checkbox"></input>
   </div>
 );
 
@@ -25,9 +25,9 @@ const getTotalClicks = (counters: Counter[]) =>
   counters.reduce((partialSum, counter) => partialSum + counter.clicks, 0);
 
 const getTotalChecked = (counters: Counter[]) =>
-  counters
-    .filter((c) => c.checked)
-    .reduce((partialSum, counter) => partialSum + counter.clicks, 0);
+  counters.filter((c) => c.checked).length;
+
+//.reduce((partialSum, counter) => partialSum + counter.clicks, 0);
 
 const cat = (counters: Counter[]) =>
   counters.reduce((i, counter) => i + counter.text, "");

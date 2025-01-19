@@ -5,7 +5,7 @@ import type {
   JSXExpressionContainer,
   JSXText,
 } from "@babel/types";
-import { createElement, createTextNode } from "../utils";
+import { createElement, createTextNode, setAttributeCallback } from "../utils";
 import { ERROR_MESSAGES, error } from "../errors";
 import { WATCH_CALLBACK_PARAMS } from "../constants";
 
@@ -95,7 +95,7 @@ export class ExtractedNode {
     }
     this.watches.push({
       expression,
-      callback: `${WATCH_CALLBACK_PARAMS.element}.setAttribute("${attName}", n)`,
+      callback: setAttributeCallback(attName),
     });
   }
   watchText(expression: Expression) {

@@ -48,8 +48,7 @@ export function buildComponent(cls, parent) {
 }
 
 /**
- * Wraps obj in a Proxy which calls component.update() whenever it
- * is modified.
+ * Wraps obj in a Proxy which calls component.update() whenever it is modified.
  *
  * @param {*} obj - Any object, including arrays.
  * @param {*} component - A component.
