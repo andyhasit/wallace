@@ -254,16 +254,6 @@ function processNodes(
           )
         : componentDefinition.saveElementToStash(node.address);
 
-      // TODO: change this to work during consolidation as we need to read the type
-      // of input (checkbox use checked, not value)
-      // node.watchAttribute("value", value.expression);
-      // `${watch} = ${transform}`);
-
-      //   let [watch, transform] = attInfo.args;
-      //   nodeData.addWatch(watch, undefined, "value");
-      //   transform = transform ? transform : "w.getValue()";
-      //   nodeData.addEventListener(event, `${watch} = ${transform}`);
-
       if (node.bindInstructions.length) {
         if (node.tagName.toLowerCase() == "input") {
           // @ts-ignore

@@ -12,33 +12,16 @@ class BaseDirective extends Directive {
   }
 }
 
-// bind: {
-//   help: `
-//   Binds an event listener to an element:
-
-//   /h <div bind:keyup="p.count"></div>
-//   `,
-//   allow: "expr",
-//   qualifier: "yes",
-//   handle: function (nodeData, attInfo) {
-//   const event = attInfo.qualifier;
-//   let [watch, transform] = attInfo.args;
-//   nodeData.addWatch(watch, undefined, "value");
-//   transform = transform ? transform : "w.getValue()";
-//   nodeData.addEventListener(event, `${watch} = ${transform}`);
-//   },
-// },
-
 class BindDirective extends Directive {
   static attributeName = "bind";
   static help = `
-    Binds an event listener to an element:
+    Create a two-way binding between and input element's "value" property and the
+    expression, which must be assignable. 
+    If the input is of type "checkbox", it uses the "checked" property instead.
     
-    Defaults to onChange:
-
     /h <div bind={p.count}></div>
 
-    Alternatively specify the event:
+    By defaults it listens to "change" event, but you can specify a different one:
 
     /h <div bind:keyup={p.count}></div>
   `;
