@@ -1,53 +1,80 @@
 # Wallace
 
-*Restoring freedom to the front-end.*
+*Develop faster apps faster.*
+
+[coveralls]
 
 ```
 npm i wallace
 ```
 
-## What is this?
+## Overview
 
-Wallace is a front-end framework you can use in place of React, Angular, Vue, Elm, Svelte, Solid, Riot, Preact, Knockout, Lit, Aurelia etc...
+Wallace is a front-end framework you can use in place of [React](https://react.dev/), [Angular](https://angular.dev/), [Vue](https://vuejs.org/), [Elm](https://elm-lang.org/), [Svelte](https://svelte.dev/), [SolidJS](https://www.solidjs.com/), [Lit](https://lit.dev/) etc... 
 
-Though initially built to restore the **freedom** you inevitably lose when using a framework, it turns out the design also makes Wallace:
+There are two reasons you might want to do so:
 
-* Much **simpler** to use than other frameworks.
-* More **productive**, especially as the project grows.
-* Much **faster** - both on page loads and DOM updates.
+#### Productivity
 
-We'll cover these bold claims in the tour, then finish up by exploring freedom and why that matters.
+Wallace can be learned in under 20 min - yet offers more power and flexibility than the other big frameworks. It also results in code that is easier to read, modify and reuse - all of which matters as projects grow in size and complexity.
 
-## The tour
+#### Performance
 
-This is not a tutorial, but it covers almost everything, and you can code along either in the [browser](https://stackblitz.com/edit/wallace-0-0-5-ts) or on your machine:
+Wallace beats almost every framework in the [js-framework-benchmarks](), but also lets you:
+
+1. Safely and easily run you own DOM operations alongside it.
+2. Control how it updates the DOM at as granular a level as you like.
+
+This means you can achieve the same performance as vanilla JS where needed, while preserving the advantages of using a framework - which is pretty unique.
+
+In other words: Wallace lets you **develop faster apps faster**.
+
+## Tour
+
+The tour digs deeper into those bold claims, but also covers enough for you to start using Wallace today, without the need for a tutorial.
+
+You can code along if you like:
+
+##### In the browser:
+
+Choose between [TypeScript](https://stackblitz.com/edit/wallace-0-0-5-ts) or [JavaScript]().
+
+##### On your machine:
+
+This will prompt for options and create a project:
 
 ```
-npx create-wallace-app my-app
+npx create-wallace-app
 ```
 
 ### Compiled JSX components
 
-Wallace controls the DOM with components which you define as functions which return JSX:
+Wallace controls the DOM with components which you define as functions that return JSX:
 
 ```jsx
 import { mount } from "wallace";
 
+// Define two components:
 const Task = ( task ) => <li>{task.text}</li>;
-
 const TaskList = ( tasks ) => (
   <ul>
     <Task.repeat props={tasks} />
   </ul>
 );
 
+// Mount root component to <div id="main"> and pass props:
 mount("main", TaskList, [
   { text: "Learn Wallace" },
-  { text: "Star it on gtihub" },
+  { text: "Give it a github star" },
+  { text: "Tell all your friends" },
 ]);
 ```
 
-This looks similar to React, except we used `Task.repeat` instead mangling our JSX with control structures:
+This looks similar to React, but there are two crucial differences:
+
+#### JSX rules
+
+To show, hide, or repeat elements in React, you mix JavaScript into your JSX:
 
 ```jsx
 // React code. Won't work with Wallace!
@@ -60,40 +87,131 @@ const TaskList = (tasks) => (
 );
 ```
 
-Doing this is not allowed in Wallace. You can put JavaScript curly braces, but it
+Although this is what JSX was designed for, it also turns into an unreadable mess. Wallace doesn't allow this, and instead relies on special attributes and tag formats:
 
-For example, to repeat a nested component in React, you'd have to write something like this, which throws the readability of XML out of the window:
+```jsx
+const TaskList = ( tasks ) => (
+  <ul>
+    <Task.repeat props={tasks} />
+  </ul>
+);
+```
 
-Another difference which isn't obvious
+This leaves you with more compact JSX which preserves true indentation, but also creates interesting opportunities, as we'll soon see.
 
+#### Objects vs functions
 
+React uses an *engine* which calls component functions and patches the DOM. This approach has its advantages, but also disadvantages:
 
-:
+1. There is no opportunity to change how any part of it works.
+2. You have to use awkward patterns such as "hooks" to do anything useful.
 
-1. These functions are never executed. They are replaced with generated code at compilation.
-2. The JSX follows very different rules.
+Wallace however *replaces* those functions with the JavaScript equivalent of a class during *compilation*. Mounting and nesting creates objects from those definitions:
 
+```jsx
+const obj = mount("main", Task);
+obj.update({ text: "Learn Wallace" });
+```
 
-
-For example, to repeat a nested component in React, you'd have to write something like this, which throws the readability of XML out of the window:
-
-Mention how React works, and that Wallace has real components.
-
-Default way of using JSX is to convert it to virtual DOM, but this is really limiting.
-
-Compiled. Use special tags and attributes.
-
-component definition: constructor + prototype, equivalent of class.
+We'll now cover how to do various thing in Wallace, and through those we'll see how these two differences impact developer productivity and app performance.
 
 ### Examples
 
-#### Nesting
-
-Mention TypeScript
-
 #### Hiding
 
-more compact and readable.
+Special attributes (called "directives") do most of the legwork in Wallace. Here are the `hideIf` and `showIf` directives:
+
+```jsx
+const TaskList = ( tasks ) => (
+  <div>
+    <div hideIf={tasks.length > 0}>No tasks</div>
+    <ul showIf={tasks.length > 0}>
+      <Task.repeat props={tasks} />
+    </ul>
+  </div>
+);
+```
+
+These control the `hidden` property of an element, and cancel processing of any nested elements if hidden, so in this case the `Task.repeat` mechanism will not even engage if the array is empty.
+
+#### Nesting
+
+To nest a single component, use `ComponentName.nest` as the tag name:
+
+```jsx
+const TaskList = (tasks) => (
+  <div>
+    <Task.nest props={tasks[0]} />
+  </div>
+);
+```
+
+We pass the full props object to the `props` directive, rather than making each field an attribute as it allows us to use other directives:
+
+```jsx
+const TaskList = (tasks) => (
+  <div>
+    <Task.nest props={tasks[0]} showIf={task[0].done}/>
+  </div>
+);
+```
+
+To nest multiple components of the same type, use `ComponentName.repeat` as the tag name:
+
+```jsx
+const TaskList = (tasks) => (
+  <div>
+    <Task.repeat props={tasks} />
+  </div>
+);
+```
+
+In this case the `props` directive expects an array. 
+
+##### TypeScript
+
+If you're using TypeScript you'll need to annotate component functions with the type of props they accept using the `Accepts` construct :
+
+```tsx
+import { mount, Accepts } from "wallace";
+
+interface iTask {
+  text: string;
+  done: boolean;
+}
+
+const Task: Accepts<iTask> = ({ text, done }) => (
+  <div>
+    <input type="checkbox" checked={done} />
+    <span>{text}</span>
+  </div>
+);
+
+const TaskList: Accepts<iTask[]> = (tasks) => (
+  <div>
+    <Task.repeat props={tasks} />
+  </div>
+);
+
+mount("main", TaskList, [
+  { text: "Learn Wallace", done: false },
+  ...
+]);
+```
+
+You will now be warned by your IDE if you try to pass the wrong type to `props`. Note that `Accepts` also annotates the parameters within the function, exactly as if you had written:
+
+```tsx
+// Don't do this
+const Task = ({ text, done }: iTask) => (
+  <div>
+    <input type="checkbox" checked={done} />
+    <span>{text}</span>
+  </div>
+);
+```
+
+However that won't work for `props`, only `Accepts` does that.
 
 #### CSS toggles
 
@@ -168,3 +286,56 @@ But because people like benchmarks, here's where Wallace lands:
 
 
 
+
+
+
+
+Here are three reasons you might want to:
+
+##### Productivity
+
+Wallace is really simple - you could learn everything in 20 min. Yet it is more powerful and flexible than most frameworks, and you end up with code that is easier to read, modify and reuse too.
+
+##### Performance
+
+Although Wallace beats almost every other framework on the [neutral benchmarks]() what really makes it the best choice for performance is that you can:
+
+1. 
+
+##### Protection
+
+Wallace lets you fully control *how* and *when* it updates each part of the DOM
+
+
+
+, meaning you will never be trapped with bad performance.
+
+Originally designed to be a framework which doesn't steal your freedom.
+
+> Unlike almost other framework, Wallace lets you do what you like to the DOM
+
+It was designed to give you back the **freedom** you lose when using a framework, it turns out the design also makes Wallace:
+
+* Much **simpler** to use than other frameworks.
+* More **productive**, especially as the project grows.
+* Much **faster** - both on page loads and DOM updates.
+
+We'll cover these bold claims in the tour, then finish up by exploring freedom and why that matters.
+
+
+
+This makes it much easier to follow, cut/copy/paste and edit. You will also end up with roughly 50% the number of lines of JSX.
+
+
+
+
+
+The DOM is updated by component methods.
+
+doesn't use an engine. Each component function is
+
+Components are objects built from those prototype, and that's all your left with at run time. This means:
+
+1. You can use regular coding patterns to do what you need, which are both more natural and powerful.
+2. You can tweak/extend/override how any component works.
+3. You can interact with the tree of components, because it is so simple.
