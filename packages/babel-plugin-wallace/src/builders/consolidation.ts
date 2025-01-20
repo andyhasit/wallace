@@ -236,6 +236,7 @@ function processNodes(
     const repeatInstruction = node.getRepeatInstruction();
     const createWatch =
       node.watches.length > 0 ||
+      node.bindInstructions.length > 0 ||
       shieldInfo ||
       node.isNestedClass ||
       stubName ||
@@ -252,6 +253,28 @@ function processNodes(
             nestedComponentCls,
           )
         : componentDefinition.saveElementToStash(node.address);
+
+      if (node.bindInstructions.length) {
+        if (node.tagName.toLowerCase() == "input") {
+          // @ts-ignore
+          const inputType = node.element.type.toLowerCase();
+          const attribute = inputType === "checkbox" ? "checked" : "value";
+          node.bindInstructions.forEach(({ eventName, expression }) => {
+            node.watchAttribute(attribute, expression);
+            const callback = t.assignmentExpression(
+              "=",
+              expression as Identifier,
+              t.memberExpression(
+                t.identifier(EVENT_CALLBACK_VARIABLES.element),
+                t.identifier(attribute),
+              ),
+            );
+            node.addEventListener(eventName, callback);
+          });
+        } else {
+          error(node.path, ERROR_MESSAGES.BIND_ONLY_ALLOWED_ON_INPUT);
+        }
+      }
 
       if (createWatch) {
         const _callbacks: { [key: string]: Array<Statement> } = {};
@@ -276,7 +299,7 @@ function processNodes(
 
         if (node.isNestedClass) {
           const props = node.getProps();
-          const method = props ? "setProps" : "update";
+          const method = props ? "render" : "update";
           const args = props ? [props] : [];
           addCallbackStatement(SPECIAL_SYMBOLS.alwaysUpdate, [
             expressionStatement(
@@ -298,7 +321,7 @@ function processNodes(
               callExpression(
                 memberExpression(
                   identifier(WATCH_CALLBACK_PARAMS.element),
-                  identifier("setProps"),
+                  identifier("render"),
                 ),
                 [component.propsIdentifier],
               ),
@@ -332,7 +355,6 @@ function processNodes(
             IMPORTABLES.saveMiscObject,
             [identifier(COMPONENT_BUILD_PARAMS.component), poolInstance],
           );
-          // pool.patch(element, items, component);
           addCallbackStatement(SPECIAL_SYMBOLS.alwaysUpdate, [
             expressionStatement(
               callExpression(

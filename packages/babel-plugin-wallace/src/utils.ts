@@ -2,6 +2,7 @@ import { JSDOM } from "jsdom";
 
 import * as babel from "@babel/core";
 import type { Statement } from "@babel/types";
+import { WATCH_CALLBACK_PARAMS } from "./constants";
 
 const document = new JSDOM("<!DOCTYPE html>").window.document;
 
@@ -11,6 +12,12 @@ export function createElement(tagName: string): HTMLElement {
 
 export function createTextNode(text: string): Text {
   return document.createTextNode(text);
+}
+
+export function setAttributeCallback(attName: string): string {
+  attName = attName === "class" ? "className" : attName;
+  return `${WATCH_CALLBACK_PARAMS.element}.${attName} = ${WATCH_CALLBACK_PARAMS.newValue}`;
+  // TODO: determine if non-standart att and use setAttribute() instead?
 }
 
 const REGEX_CAPITALIZED = new RegExp(/^[A-Z].*/);

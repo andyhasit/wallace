@@ -12,6 +12,8 @@ export const ERROR_MESSAGES = {
   ARROW_FUNCTION_NOT_ASSIGNED:
     "Component function must be assigned to a variable.",
   PLACEHOLDER_MAY_NOT_BE_EMPTY: "Placeholder expressions may not be empty.",
+  BIND_ONLY_ALLOWED_ON_INPUT:
+    "The `bind` directive may only be used on `input` tags.",
   PLACEHOLDER_MAY_NOT_BE_LITERAL_OBJECT:
     "Literal objects in placeholders not allowed as they will become constants.",
   INVALID_PLACEHOLDER_EXPRESSION: "Invalid expressions for a placeholder",

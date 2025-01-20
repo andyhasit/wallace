@@ -1,5 +1,3 @@
-const noop = function () {};
-
 /**
  * The base component.
  */
@@ -16,9 +14,6 @@ export function Component(parent) {
 
 var proto = Component.prototype;
 
-proto.onUpdate = noop;
-proto.afterUpdate = noop;
-
 Object.defineProperty(proto, "hidden", {
   set: function (value) {
     this.el.hidden = value;
@@ -28,24 +23,16 @@ Object.defineProperty(proto, "hidden", {
 /**
  * Sets the props and updates the component.
  */
-proto.setProps = function (props) {
+proto.render = function (props) {
   this.props = props;
   this.update();
 };
 
 /**
- * Updates the component.
- */
-proto.update = function () {
-  this.onUpdate();
-  this.updateSelf();
-  this.afterUpdate();
-};
-
-/**
+ * Updates the DOM.
  * Loops over watches, skipping n watches if elements are hidden.
  */
-proto.updateSelf = function () {
+proto.update = function () {
   let i = 0,
     watch,
     element,

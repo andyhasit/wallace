@@ -1,4 +1,4 @@
-import { mount, Accepts, Component } from "wallace";
+import { mount, Accepts } from "wallace";
 
 interface Props {
   clicks: number;
@@ -16,8 +16,5 @@ const FunctionWithProps: Accepts<Props> = ({ clicks }) => (
   </div>
 );
 
-class ClassWithProps extends Component<Props> {}
-
 mount("a", FunctionWithoutProps);
 mount("b", FunctionWithProps);
-mount("c", ClassWithProps);

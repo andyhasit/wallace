@@ -7,7 +7,7 @@ const getComponent = (pool, componentClass, key, item, parent) => {
   let component;
   if (pool.hasOwnProperty(key)) {
     component = pool[key];
-    component.setProps(item);
+    component.render(item);
   } else {
     component = createComponent(componentClass, parent, item);
     pool[key] = component;
@@ -140,7 +140,7 @@ SequentialPool.prototype.patch = function (e, items, parent) {
     item = items[i];
     if (i < poolCount) {
       component = pool[i];
-      component.setProps(item);
+      component.render(item);
     } else {
       component = createComponent(componentClass, parent, item);
       pool.push(component);

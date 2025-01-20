@@ -52,7 +52,7 @@ describe("Event directive", () => {
     const component = testMount(MyComponent, props);
     component.ref.target.click();
     expect(component.ref.target.textContent).toBe("bird");
-    component.setProps({ name: "cat" });
+    component.render({ name: "cat" });
     component.ref.target.click();
     expect(component.ref.target.textContent).toBe("cat");
   });
