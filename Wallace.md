@@ -2,6 +2,10 @@
 
 *Develop faster apps faster.*
 
+[![npm version][npm-version-image]][npm-url]
+[![npm downloads][npm-downloads-image]][npm-url]
+[![Build Status][travis-image]][travis-url]
+
 [coveralls]
 
 ```
@@ -12,11 +16,11 @@ npm i wallace
 
 Wallace is a front-end framework you can use in place of [React](https://react.dev/), [Angular](https://angular.dev/), [Vue](https://vuejs.org/), [Elm](https://elm-lang.org/), [Svelte](https://svelte.dev/), [SolidJS](https://www.solidjs.com/), [Lit](https://lit.dev/) etc... 
 
-There are two reasons you might want to do so:
+The two reasons you might want to do that are:
 
 #### Productivity
 
-Wallace can be learned in under 20 min - yet offers more power and flexibility than the other big frameworks. It also results in code that is easier to read, modify and reuse - all of which matters as projects grow in size and complexity.
+Wallace can be learned in under 20 min, yet offers more power and flexibility than the other big frameworks. It also results in code that is easier to read, modify and reuse - all of which matters as projects grow in size and complexity.
 
 #### Performance
 
@@ -37,7 +41,7 @@ You can code along if you like:
 
 ##### In the browser:
 
-Choose between [TypeScript](https://stackblitz.com/edit/wallace-0-0-5-ts) or [JavaScript]().
+Choose between [TypeScript](https://stackblitz.com/edit/wallace-ts?file=src%2Findex.tsx) or [JavaScript](https://stackblitz.com/edit/wallace-js?file=src%2Findex.jsx).
 
 ##### On your machine:
 
