@@ -2,9 +2,10 @@
   "name": "root",
   "private": true,
   "scripts": {
-    "test": "npm run test --w wallace",
+    "test": "npm test -w wallace",
+    "build": "npm run build -w babel-plugin-wallace",
     "pretty": "prettier ../ --write",
-    "publish": "lerna publish --no-private"
+    "publish": "npm login && npm run buils && lerna publish --no-private"
   },
   "workspaces": [
     "playground",

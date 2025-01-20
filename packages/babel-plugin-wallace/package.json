@@ -10,7 +10,8 @@
   ],
   "scripts": {
     "test": "echo \"All tests are in packages/wallace.\"",
-    "prepack": "shx rm -rf dist/* && tsc"
+    "build": "shx rm -rf dist/* && tsc",
+    "prepack": "npm run build"
   },
   "dependencies": {
     "@babel/plugin-syntax-jsx": "^7.22.5",
