@@ -84,7 +84,7 @@ class PropsDirective extends Directive {
   If it is a repeated component, then props should be an array of props.
   `;
   apply(node: TagNode, value: NodeValue, _qualifier: Qualifier, _base: string) {
-    node.setProps(value.expression);
+    node.render(value.expression);
   }
 }
 

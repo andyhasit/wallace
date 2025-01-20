@@ -31,7 +31,7 @@ export function getElement(elementOrId) {
  */
 export function createComponent(cls, parent, props) {
   const component = buildComponent(cls, parent);
-  component.setProps(props);
+  component.render(props);
   return component;
 }
 

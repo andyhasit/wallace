@@ -16,9 +16,9 @@ declare module "wallace" {
 
   export type Accepts<Type> = ComponentFunction<Type>;
 
-  export interface Component {
+  export interface Component<T> {
     update(): void;
-    setProps(props: any): void;
+    render(props: T): void;
     el: HTMLElement;
   }
 
@@ -27,9 +27,9 @@ declare module "wallace" {
     element: string | HTMLElement,
     component: Accepts<T>,
     props?: T,
-  ): Component;
+  ): Component<T>;
 
-  export function createProxy<T>(obj: T, component: Component): T;
+  export function createProxy<T>(obj: T, component: Component<T>): T;
 
   export function extendPrototype<T>(
     base: Accepts<T>,

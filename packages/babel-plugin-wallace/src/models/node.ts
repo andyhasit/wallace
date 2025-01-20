@@ -104,7 +104,7 @@ export class ExtractedNode {
       callback: `${WATCH_CALLBACK_PARAMS.element}.textContent = n`,
     });
   }
-  setProps(expression: Expression) {
+  render(expression: Expression) {
     if (this.isRepeatedNode) {
       this.setRepeatExpression(expression);
     } else {

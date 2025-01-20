@@ -9,7 +9,7 @@ test("Can make a component reactive", () => {
       <span>{checked ? "yep" : "nope"}</span>
     </div>
   );
-  MyComponent.prototype.setProps = function (props) {
+  MyComponent.prototype.render = function (props) {
     this.props = createProxy(props, this);
     this.update();
   };

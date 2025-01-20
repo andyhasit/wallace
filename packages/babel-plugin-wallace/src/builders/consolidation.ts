@@ -299,7 +299,7 @@ function processNodes(
 
         if (node.isNestedClass) {
           const props = node.getProps();
-          const method = props ? "setProps" : "update";
+          const method = props ? "render" : "update";
           const args = props ? [props] : [];
           addCallbackStatement(SPECIAL_SYMBOLS.alwaysUpdate, [
             expressionStatement(
@@ -321,7 +321,7 @@ function processNodes(
               callExpression(
                 memberExpression(
                   identifier(WATCH_CALLBACK_PARAMS.element),
-                  identifier("setProps"),
+                  identifier("render"),
                 ),
                 [component.propsIdentifier],
               ),
