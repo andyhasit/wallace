@@ -31,6 +31,34 @@ class BindDirective extends Directive {
   }
 }
 
+class ClassDirective extends Directive {
+  static attributeName = "class";
+  static help = `
+    Without a qualifer this acts as a normal attribute, but with a qualifier it creates
+    a toggle target for use with the "toggle" directive:
+
+    /h <div class:danger="btn-danger" toggle:danger={expr}></div>
+    `;
+  apply(node: TagNode, value: NodeValue, qualifier: Qualifier, base: string) {
+    if (value.type === "null") {
+      throw new Error("Value cannot be null");
+    }
+    if (qualifier) {
+      node.addToggleTarget(
+        qualifier,
+        value.type === "expression" ? value.expression : value.value,
+      );
+    } else {
+      // TODO: refactor as "process as normal" function.
+      if (value.type === "string") {
+        node.addFixedAttribute(base, value.value);
+      } else if (value.type === "expression") {
+        node.watchAttribute("class", value.expression);
+      }
+    }
+  }
+}
+
 class HelpDirective extends Directive {
   static attributeName = "help";
   static help = `
@@ -113,13 +141,38 @@ class ShowDirective extends Directive {
   }
 }
 
+class ToggleDirective extends Directive {
+  static attributeName = "toggle";
+  static help = `
+    If used on its own, the qualifer is the name of the css class to toggle:
+
+    /h <div toggle:danger={expr}></div>
+
+    If the element has class sets, then the qualifer corresponds to the name of the
+    class set:
+
+    /h <div class:danger="red danger" toggle:danger={expr}></div>
+    `;
+  apply(node: TagNode, value: NodeValue, qualifier: Qualifier, base: string) {
+    if (!qualifier) {
+      throw new Error("Toggle must have a qualifier");
+    }
+    if (value.type !== "expression") {
+      throw new Error("Value must be an expression");
+    }
+    node.addToggle(qualifier, value.expression);
+  }
+}
+
 export const builtinDirectives = [
   BaseDirective,
   BindDirective,
+  ClassDirective,
   HelpDirective,
   HideDirective,
   OnEventDirective,
   PropsDirective,
   RefDirective,
   ShowDirective,
+  ToggleDirective,
 ];

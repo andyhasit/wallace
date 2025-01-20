@@ -1,13 +1,5 @@
-import type {
-  ArrayExpression,
-  Expression,
-  CallExpression,
-  FunctionExpression,
-  Identifier,
-  Statement,
-} from "@babel/types";
+import type { Expression, Identifier, Statement } from "@babel/types";
 import {
-  arrayExpression,
   blockStatement,
   callExpression,
   cloneNode,
@@ -17,12 +9,11 @@ import {
   isIdentifier,
   memberExpression,
   numericLiteral,
-  returnStatement,
   stringLiteral,
 } from "@babel/types";
 import * as t from "@babel/types";
 import { codeToNode } from "../utils";
-import { Component, ExtractedNode, DynamicTextNode, Module } from "../models";
+import { Component } from "../models";
 import { ERROR_MESSAGES, error } from "../errors";
 import {
   COMPONENT_BUILD_PARAMS,
@@ -31,116 +22,9 @@ import {
   SPECIAL_SYMBOLS,
   WATCH_CALLBACK_PARAMS,
 } from "../constants";
-import { ComponentWatch, NodeAddress } from "./types";
-import { processShields } from "./visibility";
-
-function buildAddressArray(address: NodeAddress): ArrayExpression {
-  return arrayExpression(address.map((i) => numericLiteral(i)));
-}
-
-function buildFindElementCall(
-  module: Module,
-  address: NodeAddress,
-): CallExpression {
-  module.requireImport(IMPORTABLES.findElement);
-  return callExpression(identifier(IMPORTABLES.findElement), [
-    identifier(COMPONENT_BUILD_PARAMS.rootElement),
-    buildAddressArray(address),
-  ]);
-}
-
-function buildNestedClassCall(
-  module: Module,
-  address: NodeAddress,
-  componentCls: Expression,
-): CallExpression {
-  module.requireImport(IMPORTABLES.nestComponent);
-  return callExpression(identifier(IMPORTABLES.nestComponent), [
-    identifier(COMPONENT_BUILD_PARAMS.rootElement),
-    buildAddressArray(address),
-    componentCls,
-    identifier(COMPONENT_BUILD_PARAMS.component),
-  ]);
-}
-
-function removeKeys(obj: Object, keys: Array<string>) {
-  for (const prop in obj) {
-    if (keys.includes(prop)) delete obj[prop];
-    else if (typeof obj[prop] === "object") removeKeys(obj[prop], keys);
-  }
-}
-
-export class ComponentDefinitionData {
-  component: Component;
-  html: string;
-  watches: Array<ComponentWatch> = [];
-  stash: { [key: string]: CallExpression } = {};
-  baseComponent: Expression | undefined;
-  lookups: { [key: string]: FunctionExpression } = {};
-  collectedRefs: Array<string> = [];
-  #stashKey: number = 0;
-  #miscObjectKey: number = 0;
-  #lookupKeys: Array<String> = [];
-  constructor(component: Component) {
-    this.component = component;
-    this.baseComponent = component.baseComponent;
-  }
-  saveElementToStash(address: NodeAddress) {
-    this.#stashKey++;
-    const key = String(this.#stashKey);
-    this.stash[key] = buildFindElementCall(this.component.module, address);
-    return key;
-  }
-  saveNestedClassToStash(address: NodeAddress, componentCls: Expression) {
-    this.#stashKey++;
-    const key = String(this.#stashKey);
-    this.stash[key] = buildNestedClassCall(
-      this.component.module,
-      address,
-      componentCls,
-    );
-    return key;
-  }
-  addLookup(expression: Expression) {
-    const hashExpression = (expr) => {
-      const copy = JSON.parse(JSON.stringify(expr));
-      removeKeys(copy, ["start", "end", "loc"]);
-      return JSON.stringify(copy);
-    };
-    const hash = hashExpression(expression);
-    if (this.#lookupKeys.indexOf(hash) === -1) {
-      this.#lookupKeys.push(hash);
-    }
-    const key = String(this.#lookupKeys.indexOf(hash));
-    this.lookups[key] = functionExpression(
-      null,
-      this.getLookupCallBackParams(),
-      blockStatement([returnStatement(expression)]),
-    );
-    return key;
-  }
-  getFunctionIdentifier(name: IMPORTABLES) {
-    this.component.module.requireImport(name);
-    return identifier(name);
-  }
-  getLookupCallBackParams(): Array<Identifier> {
-    return [this.component.propsIdentifier, this.component.componentIdentifier];
-  }
-  wrapStashCall(
-    key: string,
-    functionName: IMPORTABLES,
-    remainingArgs: Expression[],
-  ) {
-    this.stash[key] = callExpression(this.getFunctionIdentifier(functionName), [
-      this.stash[key],
-      ...remainingArgs,
-    ]);
-  }
-  getNextMiscObjectKey() {
-    this.#miscObjectKey++;
-    return this.#miscObjectKey - 1;
-  }
-}
+import { ComponentWatch } from "./types";
+import { ComponentDefinitionData } from "./ComponentDefinitionData";
+import { getSiblings, getChildren } from "./utils";
 
 /**
  * No user code gets copied into the watch callback functions, so we can hardcode params
@@ -197,15 +81,7 @@ function renameVariablesInExpression(
   return traverseAndReplace(clonedExpression);
 }
 
-function getSiblings(node: ExtractedNode, allNodes: Array<ExtractedNode>) {
-  return allNodes.filter((n) => n.parent === node.parent && n !== node);
-}
-
-function getChildren(node: ExtractedNode, allNodes: Array<ExtractedNode>) {
-  return allNodes.filter((n) => n.parent === node);
-}
-
-function processNodes(
+export function processNodes(
   component: Component,
   componentDefinition: ComponentDefinitionData,
 ) {
@@ -299,14 +175,13 @@ function processNodes(
 
         if (node.isNestedClass) {
           const props = node.getProps();
-          const method = props ? "render" : "update";
           const args = props ? [props] : [];
           addCallbackStatement(SPECIAL_SYMBOLS.alwaysUpdate, [
             expressionStatement(
               callExpression(
                 memberExpression(
                   identifier(WATCH_CALLBACK_PARAMS.element),
-                  identifier(method),
+                  identifier("render"),
                 ),
                 args,
               ),
@@ -314,7 +189,7 @@ function processNodes(
           ]);
         }
 
-        // Need to be careful with WATCH_CALLBACK_PARAMS because
+        // Need to be careful with WATCH_CALLBACK_PARAMS
         if (stubName) {
           addCallbackStatement(SPECIAL_SYMBOLS.alwaysUpdate, [
             expressionStatement(
@@ -435,36 +310,4 @@ function processNodes(
       });
     }
   });
-}
-
-function hoistTextNodes(component: Component) {
-  const nodesToDelete = [];
-  component.extractedNodes.forEach((node) => {
-    if (node instanceof DynamicTextNode) {
-      if (getSiblings(node, component.extractedNodes).length === 0) {
-        const parent = node.parent;
-        parent.watches.push(...node.watches);
-        nodesToDelete.push(node);
-        node.element.remove();
-      }
-    }
-  });
-  nodesToDelete.forEach((node) => {
-    component.extractedNodes.splice(component.extractedNodes.indexOf(node), 1);
-  });
-}
-
-/**
- * Deals with shielding, setting ref keys and such.
- */
-export function consolidateComponent(
-  component: Component,
-): ComponentDefinitionData {
-  const componentDefinition = new ComponentDefinitionData(component);
-  hoistTextNodes(component);
-  processNodes(component, componentDefinition);
-  processShields(componentDefinition.watches);
-  // This must be done after all the processing, as DOM may have changed.
-  componentDefinition.html = component.rootElement.outerHTML;
-  return componentDefinition;
 }

@@ -48,13 +48,13 @@ export function buildComponent(cls, parent) {
 }
 
 /**
- * Wraps obj in a Proxy which calls component.update() whenever it is modified.
+ * Wraps target in a Proxy which calls component.update() whenever it is modified.
  *
- * @param {*} obj - Any object, including arrays.
+ * @param {*} target - Any object, including arrays.
  * @param {*} component - A component.
  * @returns a Proxy object.
  */
-export const createProxy = (obj, component) => {
+export const createProxy = (target, component) => {
   const handler = {
     get(target, key) {
       if (key == "isProxy") return true;
@@ -71,5 +71,5 @@ export const createProxy = (obj, component) => {
       return true;
     },
   };
-  return new Proxy(obj, handler);
+  return new Proxy(target, handler);
 };
