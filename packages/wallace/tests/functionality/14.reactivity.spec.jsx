@@ -1,6 +1,7 @@
 import { testMount } from "../utils";
 import { createProxy } from "wallace";
 
+// This tests bind, checkboxes and createProxy in one go...
 test("Can make a component reactive", () => {
   const MyComponent = ({ checked }) => (
     <div>
