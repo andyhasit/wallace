@@ -12,6 +12,25 @@ class BaseDirective extends Directive {
   }
 }
 
+class BindDirective extends Directive {
+  static attributeName = "bind";
+  static help = `
+    Create a two-way binding between and input element's "value" property and the
+    expression, which must be assignable. 
+    If the input is of type "checkbox", it uses the "checked" property instead.
+    
+    /h <div bind={p.count}></div>
+
+    By defaults it listens to "change" event, but you can specify a different one:
+
+    /h <div bind:keyup={p.count}></div>
+  `;
+  apply(node: TagNode, value: NodeValue, qualifier: Qualifier, base: string) {
+    const eventName = qualifier || "change";
+    node.addBindInstruction(eventName, value.expression);
+  }
+}
+
 class HelpDirective extends Directive {
   static attributeName = "help";
   static help = `
@@ -65,7 +84,7 @@ class PropsDirective extends Directive {
   If it is a repeated component, then props should be an array of props.
   `;
   apply(node: TagNode, value: NodeValue, _qualifier: Qualifier, _base: string) {
-    node.setProps(value.expression);
+    node.render(value.expression);
   }
 }
 
@@ -96,6 +115,7 @@ class ShowDirective extends Directive {
 
 export const builtinDirectives = [
   BaseDirective,
+  BindDirective,
   HelpDirective,
   HideDirective,
   OnEventDirective,

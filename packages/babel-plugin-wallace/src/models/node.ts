@@ -5,7 +5,7 @@ import type {
   JSXExpressionContainer,
   JSXText,
 } from "@babel/types";
-import { createElement, createTextNode } from "../utils";
+import { createElement, createTextNode, setAttributeCallback } from "../utils";
 import { ERROR_MESSAGES, error } from "../errors";
 import { WATCH_CALLBACK_PARAMS } from "../constants";
 
@@ -32,6 +32,11 @@ interface EventListener {
   callback: Expression;
 }
 
+interface BindInstruction {
+  eventName: string;
+  expression: Expression;
+}
+
 interface ConditionalDisplay {
   expression: Expression;
   reverse: boolean;
@@ -50,6 +55,7 @@ export class ExtractedNode {
   parent: TagNode;
   watches: Watch[] = [];
   eventListeners: EventListener[] = [];
+  bindInstructions: BindInstruction[] = [];
   isNestedClass: boolean = false;
   repeatExpression: Expression | undefined;
   poolExpression: Expression | undefined;
@@ -77,13 +83,19 @@ export class ExtractedNode {
     }
     this.eventListeners.push({ eventName, callback });
   }
+  addBindInstruction(eventName: string, expression: Expression) {
+    if (this.isNestedClass) {
+      error(this.path, ERROR_MESSAGES.NO_ATTRIBUTES_ON_NESTED_CLASS);
+    }
+    this.bindInstructions.push({ eventName, expression });
+  }
   watchAttribute(attName: string, expression: Expression) {
     if (this.isNestedClass) {
       error(this.path, ERROR_MESSAGES.NO_ATTRIBUTES_ON_NESTED_CLASS);
     }
     this.watches.push({
       expression,
-      callback: `${WATCH_CALLBACK_PARAMS.element}.setAttribute("${attName}", n)`,
+      callback: setAttributeCallback(attName),
     });
   }
   watchText(expression: Expression) {
@@ -92,7 +104,7 @@ export class ExtractedNode {
       callback: `${WATCH_CALLBACK_PARAMS.element}.textContent = n`,
     });
   }
-  setProps(expression: Expression) {
+  render(expression: Expression) {
     if (this.isRepeatedNode) {
       this.setRepeatExpression(expression);
     } else {

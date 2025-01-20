@@ -31,8 +31,7 @@ export function getElement(elementOrId) {
  */
 export function createComponent(cls, parent, props) {
   const component = buildComponent(cls, parent);
-  component.props = props;
-  component.update();
+  component.render(props);
   return component;
 }
 
@@ -47,3 +46,30 @@ export function buildComponent(cls, parent) {
   component._b(component, dom);
   return component;
 }
+
+/**
+ * Wraps obj in a Proxy which calls component.update() whenever it is modified.
+ *
+ * @param {*} obj - Any object, including arrays.
+ * @param {*} component - A component.
+ * @returns a Proxy object.
+ */
+export const createProxy = (obj, component) => {
+  const handler = {
+    get(target, key) {
+      if (key == "isProxy") return true;
+      const prop = target[key];
+      if (typeof prop == "undefined") return;
+      // set value as proxy if object
+      if (!prop.isProxy && typeof prop === "object")
+        target[key] = new Proxy(prop, handler);
+      return target[key];
+    },
+    set(target, key, value) {
+      target[key] = value;
+      component.update();
+      return true;
+    },
+  };
+  return new Proxy(obj, handler);
+};
