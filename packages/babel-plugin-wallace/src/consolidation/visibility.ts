@@ -2,7 +2,7 @@ import { arrayStartsWith } from "../utils";
 import { ComponentWatch, NodeAddress } from "./types";
 
 /*
- * Given an array of addresses such as
+ * Given an array of addresses such as:
  *
  *   [
  *     [0],

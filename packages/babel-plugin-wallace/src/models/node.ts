@@ -42,6 +42,16 @@ interface ConditionalDisplay {
   reverse: boolean;
 }
 
+interface Toggle {
+  name: string;
+  expression: Expression;
+}
+
+interface ToggleTarget {
+  name: string;
+  value: Expression | string;
+}
+
 type ValidElementType = JSXElement | JSXExpressionContainer | JSXText;
 
 export class ExtractedNode {
@@ -59,6 +69,8 @@ export class ExtractedNode {
   isNestedClass: boolean = false;
   repeatExpression: Expression | undefined;
   poolExpression: Expression | undefined;
+  toggleTargets: ToggleTarget[] = [];
+  toggles: Toggle[] = [];
   #stubName: string | undefined;
   #conditionalDisplay: ConditionalDisplay | undefined;
   #ref: string | undefined;
@@ -89,20 +101,29 @@ export class ExtractedNode {
     }
     this.bindInstructions.push({ eventName, expression });
   }
+  addWatch(expression: Expression, callback: string) {
+    this.watches.push({
+      expression,
+      callback,
+    });
+  }
+  addToggle(name: string, expression: Expression) {
+    this.toggles.push({ name, expression });
+  }
+  addToggleTarget(name: string, value: Expression | string) {
+    this.toggleTargets.push({ name, value });
+  }
   watchAttribute(attName: string, expression: Expression) {
     if (this.isNestedClass) {
       error(this.path, ERROR_MESSAGES.NO_ATTRIBUTES_ON_NESTED_CLASS);
     }
-    this.watches.push({
-      expression,
-      callback: setAttributeCallback(attName),
-    });
+    this.addWatch(expression, setAttributeCallback(attName));
   }
   watchText(expression: Expression) {
-    this.watches.push({
+    this.addWatch(
       expression,
-      callback: `${WATCH_CALLBACK_PARAMS.element}.textContent = n`,
-    });
+      `${WATCH_CALLBACK_PARAMS.element}.textContent = n`,
+    );
   }
   render(expression: Expression) {
     if (this.isRepeatedNode) {

@@ -11,7 +11,10 @@ import type {
 } from "@babel/types";
 import { identifier, objectExpression } from "@babel/types";
 import { escapeSingleQuotes, stripHtml } from "../utils";
-import { ComponentDefinitionData, consolidateComponent } from "./consolidation";
+import {
+  ComponentDefinitionData,
+  consolidateComponent,
+} from "../consolidation";
 import { COMPONENT_BUILD_PARAMS } from "../constants";
 
 // component base to inherit from. Using 0 as false.
@@ -130,7 +133,7 @@ export function buildDefineComponentCall(component: Component): CallExpression {
 }
 
 /**
- * Used for classes.
+ * Unused. Was for classes.
  */
 export function buildExtendComponentCall(component: Component): CallExpression {
   const componentDefinition = consolidateComponent(component);
