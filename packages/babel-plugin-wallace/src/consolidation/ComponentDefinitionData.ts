@@ -1,59 +1,28 @@
 import type {
-  ArrayExpression,
   Expression,
   CallExpression,
   FunctionExpression,
   Identifier,
 } from "@babel/types";
 import {
-  arrayExpression,
   blockStatement,
   callExpression,
   functionExpression,
   identifier,
-  numericLiteral,
   returnStatement,
 } from "@babel/types";
-import { Component, Module } from "../models";
-import { COMPONENT_BUILD_PARAMS, IMPORTABLES } from "../constants";
+import { Component } from "../models";
+import { IMPORTABLES } from "../constants";
 import { ComponentWatch, NodeAddress } from "./types";
+import {
+  buildFindElementCall,
+  buildNestedClassCall,
+  removeKeys,
+} from "./utils";
 
-function buildAddressArray(address: NodeAddress): ArrayExpression {
-  return arrayExpression(address.map((i) => numericLiteral(i)));
-}
-
-function buildFindElementCall(
-  module: Module,
-  address: NodeAddress,
-): CallExpression {
-  module.requireImport(IMPORTABLES.findElement);
-  return callExpression(identifier(IMPORTABLES.findElement), [
-    identifier(COMPONENT_BUILD_PARAMS.rootElement),
-    buildAddressArray(address),
-  ]);
-}
-
-function buildNestedClassCall(
-  module: Module,
-  address: NodeAddress,
-  componentCls: Expression,
-): CallExpression {
-  module.requireImport(IMPORTABLES.nestComponent);
-  return callExpression(identifier(IMPORTABLES.nestComponent), [
-    identifier(COMPONENT_BUILD_PARAMS.rootElement),
-    buildAddressArray(address),
-    componentCls,
-    identifier(COMPONENT_BUILD_PARAMS.component),
-  ]);
-}
-
-function removeKeys(obj: Object, keys: Array<string>) {
-  for (const prop in obj) {
-    if (keys.includes(prop)) delete obj[prop];
-    else if (typeof obj[prop] === "object") removeKeys(obj[prop], keys);
-  }
-}
-
+/**
+ * An object with all the consolidated data for writing.
+ */
 export class ComponentDefinitionData {
   component: Component;
   html: string;
