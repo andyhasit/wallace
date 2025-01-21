@@ -2,12 +2,6 @@
 
 *Develop faster apps faster.*
 
-[![npm version][npm-version-image]][npm-url]
-[![npm downloads][npm-downloads-image]][npm-url]
-[![Build Status][travis-image]][travis-url]
-
-[coveralls]
-
 ```
 npm i wallace
 ```
@@ -24,7 +18,7 @@ Wallace can be learned in under 20 min, yet offers more power and flexibility th
 
 #### Performance
 
-Wallace beats almost every framework in the [js-framework-benchmarks](), but also lets you:
+Wallace is extremely fast on benchmarks, but also lets you:
 
 1. Safely and easily run you own DOM operations alongside it.
 2. Control how it updates the DOM at as granular a level as you like.
@@ -91,7 +85,7 @@ const TaskList = (tasks) => (
 );
 ```
 
-Although this is what JSX was designed for, it also turns into an unreadable mess. Wallace doesn't allow this, and instead relies on special attributes and tag formats:
+Although this is exactly what JSX was designed for, it also turns into an unreadable mess. Wallace doesn't allow this, and instead relies on special attributes and tag formats:
 
 ```jsx
 const TaskList = ( tasks ) => (
@@ -110,11 +104,11 @@ React uses an *engine* which calls component functions and patches the DOM. This
 1. There is no opportunity to change how any part of it works.
 2. You have to use awkward patterns such as "hooks" to do anything useful.
 
-Wallace however *replaces* those functions with the JavaScript equivalent of a class during *compilation*. Mounting and nesting creates objects from those definitions:
+Wallace on the other hand *replaces* those functions with JavaScript's equivalent of a class during *compilation*. Mounting and nesting creates objects from those definitions:
 
 ```jsx
 const obj = mount("main", Task);
-obj.update({ text: "Learn Wallace" });
+obj.render({ text: "Learn Wallace" });
 ```
 
 We'll now cover how to do various thing in Wallace, and through those we'll see how these two differences impact developer productivity and app performance.
