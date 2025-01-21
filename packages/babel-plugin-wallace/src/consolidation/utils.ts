@@ -1,37 +1,13 @@
-import type {
-  ArrayExpression,
-  Expression,
-  CallExpression,
-  FunctionExpression,
-  Identifier,
-  Statement,
-} from "@babel/types";
+import type { ArrayExpression, Expression, CallExpression } from "@babel/types";
 import {
   arrayExpression,
-  blockStatement,
   callExpression,
-  cloneNode,
-  expressionStatement,
-  functionExpression,
   identifier,
-  isIdentifier,
-  memberExpression,
   numericLiteral,
-  returnStatement,
-  stringLiteral,
 } from "@babel/types";
-import * as t from "@babel/types";
-import { codeToNode } from "../utils";
-import { Component, ExtractedNode, DynamicTextNode, Module } from "../models";
-import { ERROR_MESSAGES, error } from "../errors";
-import {
-  COMPONENT_BUILD_PARAMS,
-  EVENT_CALLBACK_VARIABLES,
-  IMPORTABLES,
-  SPECIAL_SYMBOLS,
-  WATCH_CALLBACK_PARAMS,
-} from "../constants";
-import { ComponentWatch, NodeAddress } from "./types";
+import { ExtractedNode, Module } from "../models";
+import { COMPONENT_BUILD_PARAMS, IMPORTABLES } from "../constants";
+import { NodeAddress } from "./types";
 
 export function getSiblings(
   node: ExtractedNode,
@@ -45,4 +21,40 @@ export function getChildren(
   allNodes: Array<ExtractedNode>,
 ) {
   return allNodes.filter((n) => n.parent === node);
+}
+
+export function buildAddressArray(address: NodeAddress): ArrayExpression {
+  return arrayExpression(address.map((i) => numericLiteral(i)));
+}
+
+export function buildFindElementCall(
+  module: Module,
+  address: NodeAddress,
+): CallExpression {
+  module.requireImport(IMPORTABLES.findElement);
+  return callExpression(identifier(IMPORTABLES.findElement), [
+    identifier(COMPONENT_BUILD_PARAMS.rootElement),
+    buildAddressArray(address),
+  ]);
+}
+
+export function buildNestedClassCall(
+  module: Module,
+  address: NodeAddress,
+  componentCls: Expression,
+): CallExpression {
+  module.requireImport(IMPORTABLES.nestComponent);
+  return callExpression(identifier(IMPORTABLES.nestComponent), [
+    identifier(COMPONENT_BUILD_PARAMS.rootElement),
+    buildAddressArray(address),
+    componentCls,
+    identifier(COMPONENT_BUILD_PARAMS.component),
+  ]);
+}
+
+export function removeKeys(obj: Object, keys: Array<string>) {
+  for (const prop in obj) {
+    if (keys.includes(prop)) delete obj[prop];
+    else if (typeof obj[prop] === "object") removeKeys(obj[prop], keys);
+  }
 }
