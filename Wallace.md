@@ -10,7 +10,7 @@ npm i wallace
 
 Wallace is a front-end framework you can use in place of [React](https://react.dev/), [Angular](https://angular.dev/), [Vue](https://vuejs.org/), [Elm](https://elm-lang.org/), [Svelte](https://svelte.dev/), [SolidJS](https://www.solidjs.com/), [Lit](https://lit.dev/) etc... 
 
-The two reasons you might want to do that are:
+Here are two reasons you might want to:
 
 #### Productivity
 
