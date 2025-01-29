@@ -10,9 +10,7 @@
   ],
   "types": "./lib/types.d.ts",
   "scripts": {
-    "test": "jest --clearCache && jest",
-    "check": "babel $@",
-    "rebuild-plugin": "cd ../babel-plugin-wallace && npx tsc"
+    "test": "jest --clearCache && jest"
   },
   "dependencies": {
     "babel-plugin-wallace": "^0.0.5",
