@@ -126,52 +126,13 @@ The browser'd dev console will point error points and console logs to your ES6 s
 
 Given how useful this is, the webpack files in this project use an environment variable to let you control this behaviour without having to modify the file.
 
-## The babel plugin
+## The Babel plugin
 
-If you're going to make serious changes to the plugin you'll need to  read [the plugin handbook](https://github.com/jamiebuilds/babel-handbook/blob/master/translations/en/plugin-handbook.md). 
+Writing babel plugins can be tricky, so we're leaving some general notes before covering our plugin.
 
-#### TypeScript
+### General notes on writing Babel plugins.
 
-There is very little documentation on writing a Babel in TypeScript, other than [this issue](https://github.com/babel/babel/issues/10637). The plugin needs to be compiled to CommonJS to work with node. See **package.json** scripts.
-
-#### Presets
-
-Babel will typically read from the local **babel.config.cjs** which should look like this:
-
-```js
-module.exports = {
-  plugins: ["babel-plugin-wallace", "@babel/plugin-syntax-jsx"],
-  presets: ["@babel/preset-typescript", "@babel/preset-env"],
-};
-```
-
-However, this plugin must work if either of those presets are missing (and to a degree, if others are added) so it is important to test changes with each permutation.
-
-There should be tests which check this, but if making changes to the visitors then it is worth checking explicitly.
-
-#### Tests
-
-We do not test the plugin in isolation as:
-
-1) The generated code depends on the wallace library, so we test over there.
-2) The resulting output changes too often over time to validate maintaining tests.
-3) The internal code changes too much to validate testing bits of that.
-
-So we make sure to cover anything we think might break in the wallace tests, even if it doesn't seem obvious from there why it would.
-
-#### Checking output
-
-You can see the effect of the plugin by running a file through babel with npx:
-
-```
-npx babel src/index.jsx
-```
-
-The playground app's `babel.config.cjs` has toggles to disable presets, and npm scripts to run checks. Bear in mind you need to recompile if you've made any changes.
-
-### Babel notes
-
-These are just pertinent notes/reminders from the [Babel handbook](https://github.com/kentcdodds/babel-plugin-handbook/blob/master/README.md), which you should read. The [AST explorer](https://astexplorer.net/) is also very helpful, except it doesn't do JSX.
+The main/only documentation is in the [Babel handbook](https://github.com/kentcdodds/babel-plugin-handbook/blob/master/README.md), which you should read. The [AST explorer](https://astexplorer.net/) is also very helpful, except it doesn't do JSX. Lastly, ChatGTP has been extremely useful too.
 
 #### Overview
 
@@ -272,8 +233,6 @@ module.exports = () => {
 
 The node can be passed to another visitor. See https://github.com/babel/babel/issues/12976
 
-See mixed mode below.
-
 #### Building new code
 
 You create new nodes using `t` like so:
@@ -288,36 +247,142 @@ All the types are defined [here](https://github.com/babel/babel/blob/master/pack
 
 #### State
 
-Avoid global state at all costs. Also not that state errors may not be apparent until you use a tool such as webpack which loads the plugin and calls it repeatedly.
+Avoid global state at all costs. Instead pas state as an object to the `traverse()` method and have access to it on `this` in the visitor.
 
-You can pass it in as state to the `traverse()` method and have access to it on `this` in the visitor.
-
-```
+```js
 const visitorOne = {
-  Identifier(path) {
-    if (path.node.name === this.exampleState) {
+  FunctionDeclaration(path) {
+    var expectedName = path.node.params[0].name;
+    path.traverse(visitorTwo, { expectedName });
+  }
+};
+
+const visitorTwo = {
+  Identifier(path, state) {
+    if (path.node.name === state.expectedName) {
       // ...
     }
   }
 };
-
-const MyVisitor = {
-  FunctionDeclaration(path) {
-    var exampleState = path.node.params[0].name;
-    path.traverse(visitorOne, { exampleState });
-  }
-};
 ```
 
-### Examples
+#### Visitor continuation
+
+Calling `path.traverse(node)` will traverse all of node's children, regardless of what other traversals are invoked. In the following example, identifiers inside functions will be visited by visitorTwo, then again by visitorOne, unless removed:
+
+```js
+const visitorOne = {
+  FunctionDeclaration(path) {
+    path.traverse(visitorTwo);
+  }
+  Identifier(path, state) {
+    // transform here
+  }
+};
+
+const visitorTwo = {
+  Identifier(path, state) {
+    // transform here
+  }
+};
+
+path.traverse(visitorOne);
+```
+
+And any identifiers added to the AST by visitorTwo will be visited by visitorOne.
+
+#### Examples
+
+You can look at how other plugins are written:
 
 https://github.com/babel/babel/tree/main/packages
 
+### Babel-plugin-wallace
+
+Our plugin is written in TypeScript and therefore needs to be compiled after making changes with:
+
+```
+npm run build
+```
+
+There is very little documentation on writing a plugins in TypeScript, other than [this issue](https://github.com/babel/babel/issues/10637).
+
+#### Structure
+
+The code is roughly organised as follows:
+
+##### Visitors
+
+The entry point of the plugin is a set of visitors, which uses contexts (below) to determine whether a function returns JSX and should be transformed, in which case it:
+
+1. Renames function parameters, as that really needs to be done first.
+2. Starts parsing the JSX, which involves calling other visitor sets.
+
+It can be tricky wrapping your head around how visitors work, see notes further down.
+
+##### Contexts
+
+The various contexts where JSX is allowed. This made more sense when we supported classes and JSX outside of functions, so some of the code there is unused but may be brought back.
+
+##### Models
+
+These are just classes which represent real world object, like module, component, node etc... They have methods to add to their own data. The Node model is also passed to the directives, so users will interact with it if writing their own.
+
+##### Consolidation
+
+The JSX parsing works one node at a time, and is unaware of nodes that are processed after. Any work that needs to happen once all the nodes have been parsed, happens in consolidation.
+
+##### Writers
+
+These write the final generated code after consolidation.
+
+So the steps are roughly IDENTIFY > COLLECT > CONSOLIDATE > WRITE but most activities can happen at any step:
+
+* Throwing user errors
+* Working with AST
+
+#### Tests
+
+We do not test the plugin in isolation as:
+
+1) The generated code depends on the wallace library, so we test over there.
+2) The resulting output changes too often over time to validate maintaining tests.
+3) The internal code changes too much to validate testing bits of that.
+
+So we make sure to cover anything we think might break in the wallace tests, even if it doesn't seem obvious from there why it would.
+
+#### Checking output
+
+You can see the effect of the plugin by running a file through babel with npx:
+
+```
+npx babel src/index.jsx
+```
+
+The playground app's `babel.config.cjs` has toggles to disable presets, and npm scripts to run checks. Bear in mind you need to recompile if you've made any changes.
+
 ### Considerations
 
-#### Mixed mode
+#### Persistent state
+
+Tools like webpack load the plugin once, then run each file through it, so any global state will get carried over, and can cause errors such as failing to add imports because it thinks they have already been added. However, the unit tests load the plugin once per file, thereby hiding such mistakes.
+
+#### Presets
+
+Babel will typically read from the local **babel.config.cjs** which should look like this:
+
+```js
+module.exports = {
+  plugins: ["babel-plugin-wallace", "@babel/plugin-syntax-jsx"],
+  presets: ["@babel/preset-typescript", "@babel/preset-env"],
+};
+```
+
+However, this plugin must work if either of those presets are missing (and to a degree, if others are added) so it is important to test changes with each permutation.
 
 The plugin must work whether `@babel/preset-env` is set or not, meaning we cannot rely on those transformations happening, which is unfortunate as it would simplify things like props destructuring.
+
+There should be tests which check this, but if making changes to the visitors then it is worth checking explicitly.
 
 ## Tests
 
