@@ -3,10 +3,7 @@ import type { NodePath } from "@babel/core";
 import type { Function, ClassDeclaration } from "@babel/types";
 import { IMPORTABLES } from "../constants";
 import { jsxVisitors } from "../visitors/jsx";
-import {
-  buildDefineComponentCall,
-  buildExtendComponentCall,
-} from "../builders";
+import { buildDefineComponentCall, buildExtendComponentCall } from "../writers";
 import { error, ERROR_MESSAGES } from "../errors";
 import { Component, Module } from "../models";
 import { functionReturnsOnlyJSX } from "../helpers";
