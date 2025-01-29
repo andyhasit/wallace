@@ -1,4 +1,5 @@
 import { Directive, TagNode, NodeValue, Qualifier } from "./models";
+import { WATCH_CALLBACK_PARAMS } from "./constants";
 
 class BaseDirective extends Directive {
   static attributeName = "base";
@@ -9,6 +10,53 @@ class BaseDirective extends Directive {
     `;
   apply(node: TagNode, value: NodeValue, qualifier: Qualifier, base: string) {
     node.setBaseComponent(value.expression);
+  }
+}
+
+class BindDirective extends Directive {
+  static attributeName = "bind";
+  static help = `
+    Create a two-way binding between and input element's "value" property and the
+    expression, which must be assignable. 
+    If the input is of type "checkbox", it uses the "checked" property instead.
+    
+    /h <div bind={p.count}></div>
+
+    By defaults it listens to "change" event, but you can specify a different one:
+
+    /h <div bind:keyup={p.count}></div>
+  `;
+  apply(node: TagNode, value: NodeValue, qualifier: Qualifier, base: string) {
+    const eventName = qualifier || "change";
+    node.addBindInstruction(eventName, value.expression);
+  }
+}
+
+class ClassDirective extends Directive {
+  static attributeName = "class";
+  static help = `
+    Without a qualifer this acts as a normal attribute, but with a qualifier it creates
+    a toggle target for use with the "toggle" directive:
+
+    /h <div class:danger="btn-danger" toggle:danger={expr}></div>
+    `;
+  apply(node: TagNode, value: NodeValue, qualifier: Qualifier, base: string) {
+    if (value.type === "null") {
+      throw new Error("Value cannot be null");
+    }
+    if (qualifier) {
+      node.addToggleTarget(
+        qualifier,
+        value.type === "expression" ? value.expression : value.value,
+      );
+    } else {
+      // TODO: refactor as "process as normal" function.
+      if (value.type === "string") {
+        node.addFixedAttribute(base, value.value);
+      } else if (value.type === "expression") {
+        node.watchAttribute("class", value.expression);
+      }
+    }
   }
 }
 
@@ -94,12 +142,68 @@ class ShowDirective extends Directive {
   }
 }
 
+class StyleDirective extends Directive {
+  static attributeName = "style";
+  static help = `
+
+    /h <div style:color="red"></div>
+    `;
+  apply(node: TagNode, value: NodeValue, qualifier: Qualifier, base: string) {
+    if (value.type === "null") {
+      throw new Error("Value cannot be null");
+    }
+    if (qualifier) {
+      if (value.type === "string") {
+        throw new Error("Value must be an expression");
+      } else if (value.type === "expression") {
+        node.addWatch(
+          value.expression,
+          `${WATCH_CALLBACK_PARAMS.element}.style.${qualifier} = n`,
+        );
+      }
+    } else {
+      if (value.type === "string") {
+        node.addFixedAttribute(base, value.value);
+      } else if (value.type === "expression") {
+        node.watchAttribute("style", value.expression);
+      }
+    }
+  }
+}
+
+class ToggleDirective extends Directive {
+  static attributeName = "toggle";
+  static help = `
+    If used on its own, the qualifer is the name of the css class to toggle:
+
+    /h <div toggle:danger={expr}></div>
+
+    If the element has class sets, then the qualifer corresponds to the name of the
+    class set:
+
+    /h <div class:danger="red danger" toggle:danger={expr}></div>
+    `;
+  apply(node: TagNode, value: NodeValue, qualifier: Qualifier, base: string) {
+    if (!qualifier) {
+      throw new Error("Toggle must have a qualifier");
+    }
+    if (value.type !== "expression") {
+      throw new Error("Value must be an expression");
+    }
+    node.addToggleTrigger(qualifier, value.expression);
+  }
+}
+
 export const builtinDirectives = [
   BaseDirective,
+  BindDirective,
+  ClassDirective,
   HelpDirective,
   HideDirective,
   OnEventDirective,
   PropsDirective,
   RefDirective,
   ShowDirective,
+  StyleDirective,
+  ToggleDirective,
 ];

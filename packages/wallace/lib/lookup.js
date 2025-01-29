@@ -1,4 +1,5 @@
-const ALWAYS_UPDATE = "*";
+const ALWAYS_UPDATE = "__";
+
 /**
  * Used internally.
  * An object which pools the results of lookup queries so we don't have to

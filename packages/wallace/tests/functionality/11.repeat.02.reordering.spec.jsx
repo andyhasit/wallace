@@ -28,7 +28,7 @@ describe("Repeat reordering", () => {
         <div>2</div>
       </div>
     `);
-    component.setProps([5, 2, 6]);
+    component.render([5, 2, 6]);
     expect(component).toRender(`
       <div>
         <div>5</div>
@@ -40,7 +40,7 @@ describe("Repeat reordering", () => {
 
   test("Removing items works", () => {
     const component = testMount(Container, [5, 2, 3, 8]);
-    component.setProps([2, 8]);
+    component.render([2, 8]);
     expect(component).toRender(`
       <div>
         <div>2</div>
@@ -51,7 +51,7 @@ describe("Repeat reordering", () => {
 
   test("Complete replacement", () => {
     const component = testMount(Container, [5, 2, 3, 8]);
-    component.setProps([22, 18]);
+    component.render([22, 18]);
     expect(component).toRender(`
       <div>
         <div>22</div>
@@ -62,7 +62,7 @@ describe("Repeat reordering", () => {
 
   test("Reshuffle", () => {
     const component = testMount(Container, [7, 5, 6, 2]);
-    component.setProps([5, 2, 6, 7]);
+    component.render([5, 2, 6, 7]);
     expect(component).toRender(`
       <div>
         <div>5</div>
@@ -75,7 +75,7 @@ describe("Repeat reordering", () => {
 
   test("Multiple add and remove shorter", () => {
     const component = testMount(Container, [7, 5, 44, 6, 2, 8, 5, 6]);
-    component.setProps([2, 7, 11, 8, 23]);
+    component.render([2, 7, 11, 8, 23]);
     expect(component).toRender(`
       <div>
         <div>2</div>
@@ -89,7 +89,7 @@ describe("Repeat reordering", () => {
 
   test("Multiple add and remove longer", () => {
     const component = testMount(Container, [7, 5, 8]);
-    component.setProps([2, 7, 11, 8, 5, 23]);
+    component.render([2, 7, 11, 8, 5, 23]);
     expect(component).toRender(`
       <div>
         <div>2</div>
@@ -104,7 +104,7 @@ describe("Repeat reordering", () => {
 
   test("Clear", () => {
     const component = testMount(Container, [5, 2, 3, 8]);
-    component.setProps([]);
+    component.render([]);
     expect(component).toRender(`
       <div>
       </div>

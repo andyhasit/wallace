@@ -2,7 +2,7 @@
 We use a custom directive defined in `test.babel.config.cjs` because it's a fiddle
 trying to do it any other way.
 */
-import { testMount, transform, createDiv } from "../utils";
+import { testMount } from "../utils";
 
 describe("Custom directive", () => {
   test("removes its attribute", () => {
