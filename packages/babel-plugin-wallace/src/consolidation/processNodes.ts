@@ -82,7 +82,7 @@ function extractCssClasses(value: string | t.Expression) {
       .split(" ")
       .map((v) => t.stringLiteral(v));
   } else {
-    return [value];
+    return [t.spreadElement(value)];
   }
 }
 

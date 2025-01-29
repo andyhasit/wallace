@@ -1,4 +1,5 @@
 import { Directive, TagNode, NodeValue, Qualifier } from "./models";
+import { WATCH_CALLBACK_PARAMS } from "./constants";
 
 class BaseDirective extends Directive {
   static attributeName = "base";
@@ -141,6 +142,35 @@ class ShowDirective extends Directive {
   }
 }
 
+class StyleDirective extends Directive {
+  static attributeName = "style";
+  static help = `
+
+    /h <div style:color="red"></div>
+    `;
+  apply(node: TagNode, value: NodeValue, qualifier: Qualifier, base: string) {
+    if (value.type === "null") {
+      throw new Error("Value cannot be null");
+    }
+    if (qualifier) {
+      if (value.type === "string") {
+        throw new Error("Value must be an expression");
+      } else if (value.type === "expression") {
+        node.addWatch(
+          value.expression,
+          `${WATCH_CALLBACK_PARAMS.element}.style.${qualifier} = n`,
+        );
+      }
+    } else {
+      if (value.type === "string") {
+        node.addFixedAttribute(base, value.value);
+      } else if (value.type === "expression") {
+        node.watchAttribute("style", value.expression);
+      }
+    }
+  }
+}
+
 class ToggleDirective extends Directive {
   static attributeName = "toggle";
   static help = `
@@ -174,5 +204,6 @@ export const builtinDirectives = [
   PropsDirective,
   RefDirective,
   ShowDirective,
+  StyleDirective,
   ToggleDirective,
 ];
