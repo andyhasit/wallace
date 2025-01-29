@@ -160,7 +160,7 @@ class ToggleDirective extends Directive {
     if (value.type !== "expression") {
       throw new Error("Value must be an expression");
     }
-    node.addToggle(qualifier, value.expression);
+    node.addToggleTrigger(qualifier, value.expression);
   }
 }
 

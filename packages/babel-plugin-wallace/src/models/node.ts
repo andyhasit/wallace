@@ -37,12 +37,12 @@ interface BindInstruction {
   expression: Expression;
 }
 
-interface ConditionalDisplay {
+export interface ConditionalDisplay {
   expression: Expression;
   reverse: boolean;
 }
 
-interface Toggle {
+interface ToggleTrigger {
   name: string;
   expression: Expression;
 }
@@ -69,8 +69,14 @@ export class ExtractedNode {
   isNestedClass: boolean = false;
   repeatExpression: Expression | undefined;
   poolExpression: Expression | undefined;
+  /**
+   * The sets of classes that may be toggled.
+   */
   toggleTargets: ToggleTarget[] = [];
-  toggles: Toggle[] = [];
+  /**
+   * The triggers that cause the classes to be toggled.
+   */
+  toggleTriggers: ToggleTrigger[] = [];
   #stubName: string | undefined;
   #conditionalDisplay: ConditionalDisplay | undefined;
   #ref: string | undefined;
@@ -107,8 +113,8 @@ export class ExtractedNode {
       callback,
     });
   }
-  addToggle(name: string, expression: Expression) {
-    this.toggles.push({ name, expression });
+  addToggleTrigger(name: string, expression: Expression) {
+    this.toggleTriggers.push({ name, expression });
   }
   addToggleTarget(name: string, value: Expression | string) {
     this.toggleTargets.push({ name, value });

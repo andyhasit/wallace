@@ -1,19 +1,17 @@
-import type { Expression, Identifier, Statement } from "@babel/types";
+import type { Identifier, Statement } from "@babel/types";
 import {
   blockStatement,
   callExpression,
-  cloneNode,
   expressionStatement,
   functionExpression,
   identifier,
-  isIdentifier,
   memberExpression,
   numericLiteral,
   stringLiteral,
 } from "@babel/types";
 import * as t from "@babel/types";
 import { codeToNode } from "../utils";
-import { Component } from "../models";
+import { Component, ConditionalDisplay, ExtractedNode } from "../models";
 import { ERROR_MESSAGES, error } from "../errors";
 import {
   COMPONENT_BUILD_PARAMS,
@@ -24,63 +22,111 @@ import {
 } from "../constants";
 import { ComponentWatch } from "./types";
 import { ComponentDefinitionData } from "./ComponentDefinitionData";
-import { getSiblings, getChildren } from "./utils";
+import {
+  getSiblings,
+  getChildren,
+  renameVariablesInExpression,
+  buildWatchCallbackParams,
+} from "./utils";
 
-/**
- * No user code gets copied into the watch callback functions, so we can hardcode params
- * as they won't clash with anything.
- */
-function buildWatchCallbackParams() {
-  return [
-    WATCH_CALLBACK_PARAMS.newValue,
-    WATCH_CALLBACK_PARAMS.oldValue,
-    WATCH_CALLBACK_PARAMS.element,
-    WATCH_CALLBACK_PARAMS.props,
-    WATCH_CALLBACK_PARAMS.component,
-  ].map((letter) => identifier(letter));
+function addBindInstruction(node: ExtractedNode) {
+  if (node.tagName.toLowerCase() == "input") {
+    // @ts-ignore
+    const inputType = node.element.type.toLowerCase();
+    const attribute = inputType === "checkbox" ? "checked" : "value";
+    node.bindInstructions.forEach(({ eventName, expression }) => {
+      node.watchAttribute(attribute, expression);
+      const callback = t.assignmentExpression(
+        "=",
+        expression as Identifier,
+        t.memberExpression(
+          t.identifier(EVENT_CALLBACK_VARIABLES.element),
+          t.identifier(attribute),
+        ),
+      );
+      node.addEventListener(eventName, callback);
+    });
+  } else {
+    error(node.path, ERROR_MESSAGES.BIND_ONLY_ALLOWED_ON_INPUT);
+  }
 }
 
-/**
- * Use this to rename variables when there is no scope.
- * It came from chatGTP.
- */
-function renameVariablesInExpression(
-  originalExpression: Expression,
-  variableMapping: { [key: string]: string },
-): Expression {
-  // Clone the original expression to avoid modifying it
-  const clonedExpression = cloneNode(originalExpression);
-
-  // Function to replace identifiers based on the mapping
-  function replaceIdentifiers(node) {
-    if (isIdentifier(node) && variableMapping[node.name]) {
-      return identifier(variableMapping[node.name]);
-    }
-    return node;
-  }
-
-  // Recursive function to traverse and update the AST
-  function traverseAndReplace(node) {
-    // If the node is an array (e.g., arguments), handle each element
-    if (Array.isArray(node)) {
-      return node.map(traverseAndReplace);
-    }
-
-    // Replace identifiers if applicable
-    const newNode = replaceIdentifiers(node);
-
-    // Recursively handle child nodes
-    for (const key of Object.keys(newNode)) {
-      if (newNode[key] && typeof newNode[key] === "object") {
-        newNode[key] = traverseAndReplace(newNode[key]);
-      }
-    }
-    return newNode;
-  }
-
-  return traverseAndReplace(clonedExpression);
+function addShieldInfo(
+  componentDefinition: ComponentDefinitionData,
+  componentWatch: ComponentWatch,
+  shieldInfo: ConditionalDisplay,
+) {
+  const shieldLookupKey = componentDefinition.addLookup(shieldInfo.expression);
+  componentWatch.shieldInfo = {
+    count: 0,
+    key: shieldLookupKey,
+    reverse: shieldInfo.reverse,
+  };
 }
 
+function ensureToggleTargetsHaveTriggers(node: ExtractedNode) {
+  node.toggleTargets.forEach((target) => {
+    const match = node.toggleTriggers.find(
+      (trigger) => trigger.name == target.name,
+    );
+    if (!match) {
+      error(node.path, ERROR_MESSAGES.TOGGLE_TARGETS_WITHOUT_TOGGLE_TRIGGERS);
+    }
+  });
+}
+
+function extractCssClasses(value: string | t.Expression) {
+  if (typeof value == "string") {
+    return value
+      .trim()
+      .split(" ")
+      .map((v) => t.stringLiteral(v));
+  } else {
+    return [value];
+  }
+}
+
+// Notes: toggles are implemented as add/remove because:
+//  a) they allow multiple classes
+//  b) it's less brittle around truthiness
+
+function addToggleCallbackStatement(
+  componentDefinition: ComponentDefinitionData,
+  node: ExtractedNode,
+  addCallbackStatement: (lookupKey: string, statements: Statement[]) => void,
+) {
+  node.toggleTriggers.forEach((trigger) => {
+    const target = node.toggleTargets.find(
+      (target) => target.name == trigger.name,
+    );
+    const classesToToggle = target
+      ? extractCssClasses(target.value)
+      : [t.stringLiteral(trigger.name)];
+    const toBoolExpression = trigger.expression;
+    const lookupKey = componentDefinition.addLookup(toBoolExpression);
+    const getCallback = (method: "add" | "remove") =>
+      callExpression(
+        memberExpression(
+          memberExpression(
+            identifier(WATCH_CALLBACK_PARAMS.element),
+            identifier("classList"),
+          ),
+          identifier(method),
+        ),
+        classesToToggle,
+      );
+
+    addCallbackStatement(lookupKey, [
+      t.ifStatement(
+        t.identifier(WATCH_CALLBACK_PARAMS.newValue),
+        blockStatement([expressionStatement(getCallback("add"))]),
+        blockStatement([expressionStatement(getCallback("remove"))]),
+      ),
+    ]);
+  });
+}
+
+// TODO: break this up.
 export function processNodes(
   component: Component,
   componentDefinition: ComponentDefinitionData,
@@ -113,11 +159,14 @@ export function processNodes(
     const createWatch =
       node.watches.length > 0 ||
       node.bindInstructions.length > 0 ||
+      node.toggleTriggers.length > 0 ||
       shieldInfo ||
       node.isNestedClass ||
       stubName ||
       repeatInstruction;
     const shouldStash = createWatch || ref || node.eventListeners.length > 0;
+
+    ensureToggleTargetsHaveTriggers(node);
 
     if (shouldStash) {
       const nestedComponentCls = node.isNestedClass
@@ -131,25 +180,7 @@ export function processNodes(
         : componentDefinition.saveElementToStash(node.address);
 
       if (node.bindInstructions.length) {
-        if (node.tagName.toLowerCase() == "input") {
-          // @ts-ignore
-          const inputType = node.element.type.toLowerCase();
-          const attribute = inputType === "checkbox" ? "checked" : "value";
-          node.bindInstructions.forEach(({ eventName, expression }) => {
-            node.watchAttribute(attribute, expression);
-            const callback = t.assignmentExpression(
-              "=",
-              expression as Identifier,
-              t.memberExpression(
-                t.identifier(EVENT_CALLBACK_VARIABLES.element),
-                t.identifier(attribute),
-              ),
-            );
-            node.addEventListener(eventName, callback);
-          });
-        } else {
-          error(node.path, ERROR_MESSAGES.BIND_ONLY_ALLOWED_ON_INPUT);
-        }
+        addBindInstruction(node);
       }
 
       if (createWatch) {
@@ -189,6 +220,14 @@ export function processNodes(
           ]);
         }
 
+        if (node.toggleTriggers.length) {
+          addToggleCallbackStatement(
+            componentDefinition,
+            node,
+            addCallbackStatement,
+          );
+        }
+
         // Need to be careful with WATCH_CALLBACK_PARAMS
         if (stubName) {
           addCallbackStatement(SPECIAL_SYMBOLS.alwaysUpdate, [
@@ -205,14 +244,7 @@ export function processNodes(
         }
 
         if (shieldInfo) {
-          const shieldLookupKey = componentDefinition.addLookup(
-            shieldInfo.expression,
-          );
-          componentWatch.shieldInfo = {
-            count: 0,
-            key: shieldLookupKey,
-            reverse: shieldInfo.reverse,
-          };
+          addShieldInfo(componentDefinition, componentWatch, shieldInfo);
         }
 
         if (repeatInstruction) {
