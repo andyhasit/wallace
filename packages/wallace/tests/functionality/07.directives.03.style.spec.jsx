@@ -1,7 +1,7 @@
 import { testMount } from "../utils";
 
-describe("Style", () => {
-  test("Can toggle a class on and off", () => {
+describe("Style directive", () => {
+  test("changes style", () => {
     let color = "red";
     const Leopard = () => (
       <div ref:target style:color={color}>
@@ -18,7 +18,7 @@ describe("Style", () => {
     expect(component.ref.target.style.color).toBe("green");
   });
 
-  test("Toggle leaves existing styles alone", () => {
+  test("leaves existing styles alone", () => {
     let color = "red";
     const Leopard = () => (
       <div style="width: 100px" ref:target style:color={color}>
