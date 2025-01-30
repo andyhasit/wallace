@@ -249,14 +249,33 @@ export function processNodes(
 
         if (repeatInstruction) {
           const miscObjectKey = componentDefinition.getNextMiscObjectKey();
-          componentDefinition.component.module.requireImport(
-            IMPORTABLES.getSequentialPool,
-          );
-          const poolInstance =
-            repeatInstruction.poolExpression ||
-            callExpression(identifier(IMPORTABLES.getSequentialPool), [
-              identifier(repeatInstruction.componentCls),
-            ]);
+
+          if (repeatInstruction.repeatKey && repeatInstruction.poolExpression) {
+            error(node.path, ERROR_MESSAGES.REPEAT_KEY_WITH_POOL);
+          }
+          let poolInstance;
+
+          if (repeatInstruction.poolExpression) {
+            poolInstance = repeatInstruction.poolExpression;
+          } else if (repeatInstruction.repeatKey) {
+            // TODO: use keyFn
+            // componentDefinition.component.module.requireImport(
+            //   IMPORTABLES.getSequentialPool,
+            // );
+            // poolInstance = callExpression(
+            //   identifier(IMPORTABLES.getSequentialPool),
+            //   [identifier(repeatInstruction.componentCls)],
+            // );
+          } else {
+            componentDefinition.component.module.requireImport(
+              IMPORTABLES.getSequentialPool,
+            );
+            poolInstance = callExpression(
+              identifier(IMPORTABLES.getSequentialPool),
+              [identifier(repeatInstruction.componentCls)],
+            );
+          }
+
           componentDefinition.wrapStashCall(
             stashRef,
             IMPORTABLES.saveMiscObject,
@@ -278,7 +297,7 @@ export function processNodes(
                 ),
                 [
                   identifier(WATCH_CALLBACK_PARAMS.element),
-                  repeatInstruction.expression,
+                  repeatInstruction.props,
                   component.componentIdentifier,
                 ],
               ),

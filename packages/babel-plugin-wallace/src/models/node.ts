@@ -22,8 +22,9 @@ interface Watch {
 }
 
 interface RepeatInstruction {
-  expression: Expression;
+  props: Expression;
   componentCls: string;
+  repeatKey: Expression | undefined;
   poolExpression: Expression | undefined;
 }
 
@@ -67,7 +68,8 @@ export class ExtractedNode {
   eventListeners: EventListener[] = [];
   bindInstructions: BindInstruction[] = [];
   isNestedClass: boolean = false;
-  repeatExpression: Expression | undefined;
+  repeatProps: Expression | undefined;
+  repeatKey: Expression | undefined;
   poolExpression: Expression | undefined;
   /**
    * The sets of classes that may be toggled.
@@ -133,7 +135,7 @@ export class ExtractedNode {
   }
   setProps(expression: Expression) {
     if (this.isRepeatedNode) {
-      this.setRepeatExpression(expression);
+      this.setRepeatProps(expression);
     } else {
       if (this.#props) {
         error(this.path, ERROR_MESSAGES.PROPS_ALREADY_DEFINED);
@@ -163,7 +165,7 @@ export class ExtractedNode {
     return this.#ref;
   }
   // TODO: fix not to use directive.
-  setRepeatExpression(expression: Expression) {
+  setRepeatProps(expression: Expression) {
     if (!this.parent) {
       error(this.path, ERROR_MESSAGES.REPEAT_WITHOUT_PARENT);
     }
@@ -176,7 +178,7 @@ export class ExtractedNode {
     this.isRepeatedNode = true;
     // While this could potentially be set multiple times, we later check that repeat
     // cannot be used if there siblings.
-    this.repeatExpression = expression;
+    this.repeatProps = expression;
     this.parent.repeatNode = this;
   }
   /**
@@ -185,8 +187,9 @@ export class ExtractedNode {
   getRepeatInstruction(): RepeatInstruction | undefined {
     return this.repeatNode
       ? {
-          expression: this.repeatNode.repeatExpression,
+          props: this.repeatNode.repeatProps,
           componentCls: this.repeatNode.tagName,
+          repeatKey: this.repeatNode.repeatKey,
           poolExpression: this.repeatNode.poolExpression,
         }
       : undefined;
