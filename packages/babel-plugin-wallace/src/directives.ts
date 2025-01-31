@@ -85,6 +85,24 @@ class HideDirective extends Directive {
   }
 }
 
+class KeyDirective extends Directive {
+  static attributeName = "key";
+  static help = `
+    Specifies the key for a repeated node. Can either specify a function:
+
+    /h <Foo.repeat props={} key={(x) => x.id}></div>
+
+    Or a string:
+
+    /h <Foo.repeat props={} key="id"></div>
+
+    If specifying a key, you may not specify a pool.
+    `;
+  apply(node: TagNode, value: NodeValue, qualifier: Qualifier, base: string) {
+    node.setRepeatKey(value.expression || value.value);
+  }
+}
+
 class OnEventDirective extends Directive {
   static attributeName = "on*";
   static help = `
@@ -99,6 +117,20 @@ class OnEventDirective extends Directive {
     } else {
       node.addEventListener(base.substring(2).toLowerCase(), value.expression);
     }
+  }
+}
+
+class PoolDirective extends Directive {
+  static attributeName = "pool";
+  static help = `
+    Specifies the pool for a repeated node.
+
+    /h <Foo.repeat props={} pool={sharedPool}></div>
+
+    If specifying a pool, you may not specify a key.
+    `;
+  apply(node: TagNode, value: NodeValue, qualifier: Qualifier, base: string) {
+    node.setRepeatPool(value.expression);
   }
 }
 
@@ -200,7 +232,9 @@ export const builtinDirectives = [
   ClassDirective,
   HelpDirective,
   HideDirective,
+  KeyDirective,
   OnEventDirective,
+  PoolDirective,
   PropsDirective,
   RefDirective,
   ShowDirective,

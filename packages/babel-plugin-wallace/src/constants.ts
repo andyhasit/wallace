@@ -20,6 +20,7 @@ export enum IMPORTABLES {
   saveMiscObject = "saveMiscObject",
   onEvent = "onEvent",
   getSequentialPool = "getSequentialPool",
+  getKeyedPool = "getKeyedPool",
 }
 
 export enum EVENT_CALLBACK_VARIABLES {

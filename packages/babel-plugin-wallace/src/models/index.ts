@@ -7,6 +7,7 @@ import {
   DynamicTextNode,
   PlainTextNode,
   ConditionalDisplay,
+  RepeatInstruction,
 } from "./node";
 
 export {
@@ -20,5 +21,6 @@ export {
   PlainTextNode,
   Module,
   Qualifier,
+  RepeatInstruction,
   WalkTracker,
 };

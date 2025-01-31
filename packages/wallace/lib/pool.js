@@ -3,13 +3,13 @@ import { createComponent } from "./utils";
 /*
  * Gets a component from the pool.
  */
-const getComponent = (pool, componentClass, key, item, parent) => {
+const getComponent = (pool, componentDefinition, key, item, parent) => {
   let component;
   if (pool.hasOwnProperty(key)) {
     component = pool[key];
     component.render(item);
   } else {
-    component = createComponent(componentClass, parent, item);
+    component = createComponent(componentDefinition, parent, item);
     pool[key] = component;
   }
   return component;
@@ -47,11 +47,11 @@ function pull(arr, item, to) {
  * Pools same type components, retrieving by key.
  * Must not be shared.
  *
- * @param {class} componentClass - The class of Component to create.
- * @param {function} keyFn - A function which obtains the key to pool by
+ * @param {class} componentDefinition - The class of Component to create.
+ * @param {function} keyFn - A function which obtains the key to pool by.
  */
-export function KeyedPool(componentClass, keyFn) {
-  this._v = componentClass;
+export function KeyedPool(componentDefinition, keyFn) {
+  this._d = componentDefinition;
   this._f = keyFn;
   this._k = []; // keys
   this._p = {}; // pool of component instances
@@ -62,11 +62,11 @@ const proto = KeyedPool.prototype;
  * Retrieves a single component. Though not used in wallace itself, it may
  * be used elsewhere, such as in the router.
  *
- * @param {Object} item - The item which will be passed as props.
+ * @param {Object} props - The props object.
  * @param {Component} parent - The parent component.
  */
-proto.getOne = function (item, parent) {
-  return getComponent(this._p, this._v, this._f(item), item, parent);
+proto.getOne = function (props, parent) {
+  return getComponent(this._p, this._d, this._f(props), props, parent);
 };
 
 /**
@@ -81,20 +81,20 @@ proto.patch = function (e, items, parent) {
   // Attempt to speed up by reducing lookups. Does this even do anything?
   // Does webpack undo this/do it for for me? Does the engine?
   const pool = this._p;
-  const componentClass = this._v;
+  const componentDefinition = this._d;
   const keyFn = this._f;
   const childNodes = e.childNodes;
   const itemsLength = items.length;
   const oldKeySequence = this._k;
   const newKeys = [];
-  let item,
+  let props,
     key,
     component,
     childElementCount = oldKeySequence.length + 1;
   for (let i = 0; i < itemsLength; i++) {
-    item = items[i];
-    key = keyFn(item);
-    component = getComponent(pool, componentClass, key, item, parent);
+    props = items[i];
+    key = keyFn(props);
+    component = getComponent(pool, componentDefinition, key, props, parent);
     newKeys.push(key);
     if (i > childElementCount) {
       e.appendChild(component.el);
@@ -110,10 +110,10 @@ proto.patch = function (e, items, parent) {
 /**
  * Pools same type components, retrieving by sequence.
  *
- * @param {class} componentClass - The class of Component to create.
+ * @param {class} componentDefinition - The class of Component to create.
  */
-export function SequentialPool(componentClass) {
-  this._v = componentClass;
+export function SequentialPool(componentDefinition) {
+  this._d = componentDefinition;
   this._p = []; // pool of component instances
   this._c = 0; // Child element count
 }
@@ -128,21 +128,21 @@ export function SequentialPool(componentClass) {
  */
 SequentialPool.prototype.patch = function (e, items, parent) {
   const pool = this._p;
-  const componentClass = this._v;
+  const componentDefinition = this._d;
   const childNodes = e.childNodes;
   const itemsLength = items.length;
-  let item,
+  let props,
     component,
     poolCount = pool.length,
     childElementCount = this._c;
 
   for (let i = 0; i < itemsLength; i++) {
-    item = items[i];
+    props = items[i];
     if (i < poolCount) {
       component = pool[i];
-      component.render(item);
+      component.render(props);
     } else {
-      component = createComponent(componentClass, parent, item);
+      component = createComponent(componentDefinition, parent, props);
       pool.push(component);
       poolCount++;
     }

@@ -21,10 +21,10 @@ interface Watch {
   // shieldInfo?: ShieldInfo | undefined;
 }
 
-interface RepeatInstruction {
+export interface RepeatInstruction {
   props: Expression;
   componentCls: string;
-  repeatKey: Expression | undefined;
+  repeatKey: Expression | string | undefined;
   poolExpression: Expression | undefined;
 }
 
@@ -69,8 +69,8 @@ export class ExtractedNode {
   bindInstructions: BindInstruction[] = [];
   isNestedClass: boolean = false;
   repeatProps: Expression | undefined;
-  repeatKey: Expression | undefined;
-  poolExpression: Expression | undefined;
+  repeatKey: Expression | string | undefined;
+  repeatPool: Expression | undefined;
   /**
    * The sets of classes that may be toggled.
    */
@@ -133,6 +133,12 @@ export class ExtractedNode {
       `${WATCH_CALLBACK_PARAMS.element}.textContent = n`,
     );
   }
+  setRepeatKey(expression: Expression | string) {
+    this.repeatKey = expression;
+  }
+  setRepeatPool(expression: Expression) {
+    this.repeatPool = expression;
+  }
   setProps(expression: Expression) {
     if (this.isRepeatedNode) {
       this.setRepeatProps(expression);
@@ -190,7 +196,7 @@ export class ExtractedNode {
           props: this.repeatNode.repeatProps,
           componentCls: this.repeatNode.tagName,
           repeatKey: this.repeatNode.repeatKey,
-          poolExpression: this.repeatNode.poolExpression,
+          poolExpression: this.repeatNode.repeatPool,
         }
       : undefined;
   }

@@ -2,6 +2,7 @@ import type { Identifier, Statement } from "@babel/types";
 import {
   blockStatement,
   callExpression,
+  Expression,
   expressionStatement,
   functionExpression,
   identifier,
@@ -11,7 +12,12 @@ import {
 } from "@babel/types";
 import * as t from "@babel/types";
 import { codeToNode } from "../utils";
-import { Component, ConditionalDisplay, ExtractedNode } from "../models";
+import {
+  Component,
+  ConditionalDisplay,
+  ExtractedNode,
+  RepeatInstruction,
+} from "../models";
 import { ERROR_MESSAGES, error } from "../errors";
 import {
   COMPONENT_BUILD_PARAMS,
@@ -124,6 +130,19 @@ function addToggleCallbackStatement(
       ),
     ]);
   });
+}
+
+function getKeyFunction(repeatKey: Expression | string | undefined) {
+  if (typeof repeatKey === "string") {
+    const param = t.identifier("x");
+    return t.arrowFunctionExpression(
+      [param],
+      t.blockStatement([
+        t.returnStatement(t.memberExpression(param, t.identifier(repeatKey))),
+      ]),
+    );
+  }
+  return repeatKey;
 }
 
 // TODO: break this up.
@@ -248,24 +267,23 @@ export function processNodes(
         }
 
         if (repeatInstruction) {
-          const miscObjectKey = componentDefinition.getNextMiscObjectKey();
-
           if (repeatInstruction.repeatKey && repeatInstruction.poolExpression) {
-            error(node.path, ERROR_MESSAGES.REPEAT_KEY_WITH_POOL);
+            error(node.path, ERROR_MESSAGES.REPEAT_KEY_OR_POOL);
           }
+          const miscObjectKey = componentDefinition.getNextMiscObjectKey();
           let poolInstance;
 
           if (repeatInstruction.poolExpression) {
             poolInstance = repeatInstruction.poolExpression;
           } else if (repeatInstruction.repeatKey) {
-            // TODO: use keyFn
-            // componentDefinition.component.module.requireImport(
-            //   IMPORTABLES.getSequentialPool,
-            // );
-            // poolInstance = callExpression(
-            //   identifier(IMPORTABLES.getSequentialPool),
-            //   [identifier(repeatInstruction.componentCls)],
-            // );
+            const keyFunction = getKeyFunction(repeatInstruction.repeatKey);
+            componentDefinition.component.module.requireImport(
+              IMPORTABLES.getKeyedPool,
+            );
+            poolInstance = callExpression(
+              identifier(IMPORTABLES.getKeyedPool),
+              [identifier(repeatInstruction.componentCls), keyFunction],
+            );
           } else {
             componentDefinition.component.module.requireImport(
               IMPORTABLES.getSequentialPool,
