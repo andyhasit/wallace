@@ -135,7 +135,8 @@ function addToggleCallbackStatement(
 function getKeyFunction(repeatKey: Expression | string | undefined) {
   if (typeof repeatKey === "string") {
     const param = t.identifier("x");
-    return t.arrowFunctionExpression(
+    return t.functionExpression(
+      null,
       [param],
       t.blockStatement([
         t.returnStatement(t.memberExpression(param, t.identifier(repeatKey))),
@@ -267,22 +268,30 @@ export function processNodes(
         }
 
         if (repeatInstruction) {
-          if (repeatInstruction.repeatKey && repeatInstruction.poolExpression) {
-            error(node.path, ERROR_MESSAGES.REPEAT_KEY_OR_POOL);
+          if (
+            repeatInstruction.poolExpression &&
+            !repeatInstruction.repeatKey
+          ) {
+            error(node.path, ERROR_MESSAGES.REPEAT_POOL_NEEDS_A_KEY);
           }
           const miscObjectKey = componentDefinition.getNextMiscObjectKey();
           let poolInstance;
 
-          if (repeatInstruction.poolExpression) {
-            poolInstance = repeatInstruction.poolExpression;
-          } else if (repeatInstruction.repeatKey) {
+          // if (repeatInstruction.poolExpression) {
+          //   poolInstance = repeatInstruction.poolExpression;
+          // } else
+          if (repeatInstruction.repeatKey) {
             const keyFunction = getKeyFunction(repeatInstruction.repeatKey);
             componentDefinition.component.module.requireImport(
               IMPORTABLES.getKeyedPool,
             );
             poolInstance = callExpression(
               identifier(IMPORTABLES.getKeyedPool),
-              [identifier(repeatInstruction.componentCls), keyFunction],
+              [
+                identifier(repeatInstruction.componentCls),
+                keyFunction,
+                repeatInstruction.poolExpression || t.arrayExpression([]),
+              ],
             );
           } else {
             componentDefinition.component.module.requireImport(

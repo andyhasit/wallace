@@ -50,11 +50,11 @@ function pull(arr, item, to) {
  * @param {class} componentDefinition - The class of Component to create.
  * @param {function} keyFn - A function which obtains the key to pool by.
  */
-export function KeyedPool(componentDefinition, keyFn) {
+export function KeyedPool(componentDefinition, keyFn, pool) {
   this._d = componentDefinition;
   this._f = keyFn;
   this._k = []; // keys
-  this._p = {}; // pool of component instances
+  this._p = pool || {}; // pool of component instances
 }
 
 /**
