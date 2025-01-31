@@ -49,10 +49,10 @@ export const onEvent = (element, eventName, callback) => {
 };
 
 /**
- * Creates a pool.
+ * Creates a pool. Do I even need these functions?
  */
-export const getKeyedPool = (cls, keyFn) => {
-  return new KeyedPool(cls, keyFn);
+export const getKeyedPool = (cls, keyFn, pool) => {
+  return new KeyedPool(cls, keyFn, pool);
 };
 
 export const getSequentialPool = (cls) => {

@@ -1,6 +1,6 @@
 import { testMount } from "../utils";
 
-describe("Repeat with pool", () => {
+describe("Repeat with shared pool", () => {
   const primary = [
     { text: "red", id: 1 },
     { text: "green", id: 2 },
@@ -28,6 +28,8 @@ describe("Repeat with pool", () => {
 
   test("on initial testMount", () => {
     const component = testMount(Main);
+
+    expect(Object.keys(pool)).toEqual(["1", "2", "3", "4", "5"]);
     expect(component).toRender(`
       <div>
         <ul>
@@ -41,6 +43,8 @@ describe("Repeat with pool", () => {
         </ul>
       </div>
     `);
+
+    expect(Object.keys(pool)).toEqual(["1", "2", "3", "4", "5"]);
     other.push(primary.pop());
     component.update();
     expect(component).toRender(`
@@ -48,13 +52,15 @@ describe("Repeat with pool", () => {
         <ul>
           <li id="1">red</li>
           <li id="2">green</li>
-          </ul>
-          <ul>
+        </ul>
+        <ul>
           <li id="4">purple</li>
           <li id="5">teal</li>
           <li id="3">blue</li>
         </ul>
       </div>
     `);
+
+    expect(Object.keys(pool)).toEqual(["1", "2", "3", "4", "5"]);
   });
 });
