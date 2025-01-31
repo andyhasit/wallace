@@ -3,7 +3,7 @@ import { createComponent } from "./utils";
 /*
  * Gets a component from the pool.
  */
-const getComponent = (pool, componentDefinition, key, item, parent) => {
+function getComponent(pool, componentDefinition, key, item, parent) {
   let component;
   if (pool.hasOwnProperty(key)) {
     component = pool[key];
@@ -13,7 +13,7 @@ const getComponent = (pool, componentDefinition, key, item, parent) => {
     pool[key] = component;
   }
   return component;
-};
+}
 
 /**
  * Trims the unwanted child elements from the end.
@@ -56,7 +56,6 @@ export function KeyedPool(componentDefinition, keyFn) {
   this._k = []; // keys
   this._p = {}; // pool of component instances
 }
-const proto = KeyedPool.prototype;
 
 /**
  * Retrieves a single component. Though not used in wallace itself, it may
@@ -65,7 +64,7 @@ const proto = KeyedPool.prototype;
  * @param {Object} props - The props object.
  * @param {Component} parent - The parent component.
  */
-proto.getOne = function (props, parent) {
+KeyedPool.prototype.getOne = function (props, parent) {
   return getComponent(this._p, this._d, this._f(props), props, parent);
 };
 
@@ -77,7 +76,7 @@ proto.getOne = function (props, parent) {
  * @param {Array} items - Array of items which will be passed as props.
  * @param {Component} parent - The parent component.
  */
-proto.patch = function (e, items, parent) {
+KeyedPool.prototype.patch = function (e, items, parent) {
   // Attempt to speed up by reducing lookups. Does this even do anything?
   // Does webpack undo this/do it for for me? Does the engine?
   const pool = this._p;
